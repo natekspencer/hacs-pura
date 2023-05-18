@@ -85,7 +85,7 @@ class PuraEntity(CoordinatorEntity[PuraDataUpdateCoordinator]):
             identifiers={(DOMAIN, device_id)},
             manufacturer="Pura",
             model=device.get("model"),
-            name=name,
+            name=f"{name} Diffuser",
             suggested_area=name,
             sw_version=device["fw_version"],
             hw_version=device["hw_version"],

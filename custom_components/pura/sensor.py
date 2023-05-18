@@ -1,11 +1,18 @@
 """Support for Pura sensors."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
+from typing import Any
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from pypura import fragrance_name
@@ -18,17 +25,41 @@ from .entity import PuraDataUpdateCoordinator, PuraEntity
 class RequiredKeysMixin:
     """Required keys mixin."""
 
-    bay: int
+    value_fn: Callable[[dict], Any]
 
 
 @dataclass
-class PuraFragranceSensorEntityDescription(SensorEntityDescription, RequiredKeysMixin):
-    """Pura fragrance sensor entity description."""
+class PuraSensorEntityDescription(SensorEntityDescription, RequiredKeysMixin):
+    """Pura sensor entity description."""
 
 
-SENSOR_DESCRIPTIONS = (
-    PuraFragranceSensorEntityDescription(key="bay_1", name="Slot 1", bay=1),
-    PuraFragranceSensorEntityDescription(key="bay_2", name="Slot 2", bay=2),
+SENSORS = (
+    PuraSensorEntityDescription(
+        key="bay_1",
+        name="Slot 1",
+        icon="mdi:scent",
+        value_fn=lambda data: fragrance_name(data["bay_1"]["code"]),
+    ),
+    PuraSensorEntityDescription(
+        key="bay_1_runtime",
+        name="Slot 1 runtime",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        value_fn=lambda data: data["bay_1"]["wearing_time"],
+    ),
+    PuraSensorEntityDescription(
+        key="bay_2",
+        name="Slot 2",
+        icon="mdi:scent",
+        value_fn=lambda data: fragrance_name(data["bay_2"]["code"]),
+    ),
+    PuraSensorEntityDescription(
+        key="bay_2_runtime",
+        name="Slot 2 runtime",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        value_fn=lambda data: data["bay_2"]["wearing_time"],
+    ),
 )
 
 
@@ -50,7 +81,7 @@ async def async_setup_entry(
         for device_type, devices in coordinator.devices.items()
         if device_type == "wall"
         for device in devices
-        for description in SENSOR_DESCRIPTIONS
+        for description in SENSORS
     ]
 
     if not entities:
@@ -60,18 +91,12 @@ async def async_setup_entry(
 
 
 class PuraSensorEntity(PuraEntity, SensorEntity):
-    """Pura sensor."""
+    """Pura sensor entity."""
 
-    entity_description: PuraFragranceSensorEntityDescription
+    entity_description: PuraSensorEntityDescription
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_icon = "mdi:scent"
 
     @property
-    def native_value(self) -> str:
+    def native_value(self) -> str | int | datetime | None:
         """Return the value reported by the sensor."""
-        return fragrance_name(self._fragrance_data["code"])
-
-    @property
-    def _fragrance_data(self) -> dict:
-        """Get the fragrance data."""
-        return self.get_device()[f"bay_{self.entity_description.bay}"]
+        return self.entity_description.value_fn(self.get_device())

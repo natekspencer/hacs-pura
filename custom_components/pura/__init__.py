@@ -4,12 +4,7 @@ from __future__ import annotations
 import logging
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_ACCESS_TOKEN,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    Platform,
-)
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from pypura import Pura, PuraAuthenticationError
@@ -20,6 +15,7 @@ from .entity import PuraDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
+    Platform.BINARY_SENSOR,
     Platform.LIGHT,
     Platform.NUMBER,
     Platform.SELECT,
