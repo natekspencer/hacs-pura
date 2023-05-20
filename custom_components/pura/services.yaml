@@ -18,8 +18,8 @@ start_timer:
       selector:
         select:
           options:
-            - 1
-            - 2
+            - "1"
+            - "2"
     intensity:
       name: Intensity
       description: Fragrance intensity
