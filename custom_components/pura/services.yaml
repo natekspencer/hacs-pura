@@ -1,0 +1,43 @@
+# Describes the format for available Pura services
+
+start_timer:
+  name: Start timer
+  description: Start a fragrance timer.
+  target:
+    device:
+      - integration: pura
+    entity:
+      - integration: pura
+  fields:
+    slot:
+      name: Slot
+      description: Fragrance slot
+      required: true
+      example: 1
+      default: 1
+      selector:
+        select:
+          options:
+            - "1"
+            - "2"
+    intensity:
+      name: Intensity
+      description: Fragrance intensity
+      required: true
+      example: 4
+      default: 4
+      selector:
+        number:
+          min: 1
+          max: 10
+    duration:
+      name: Duration
+      description: Timer duration
+      required: true
+      example: "hours: 4\nminutes: 0\nseconds: 0"
+      default:
+        hours: 4
+        minutes: 0
+        seconds: 0
+      selector:
+        duration:

@@ -1,18 +1,38 @@
 """Support for Pura fragrance slots."""
 from __future__ import annotations
 
+from datetime import timedelta
 import functools
+
+from pypura import PuraApiException, fragrance_name
+import voluptuous as vol
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from pypura import fragrance_name
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    async_get_current_platform,
+)
 
-from .const import DOMAIN
+from .const import ATTR_DURATION, ATTR_INTENSITY, ATTR_SLOT, DOMAIN, ERROR_AWAY_MODE
 from .entity import PuraDataUpdateCoordinator, PuraEntity
 
 SELECT_DESCRIPTION = SelectEntityDescription(key="fragrance", name="Fragrance")
+
+SERVICE_START_TIMER = "start_timer"
+SERVICE_TIMER_SCHEMA = vol.All(
+    cv.make_entity_service_schema(
+        {
+            vol.Required(ATTR_SLOT): vol.All(vol.Coerce(int), vol.Range(min=1, max=2)),
+            vol.Required(ATTR_INTENSITY): vol.All(
+                vol.Coerce(int), vol.Range(min=1, max=10)
+            ),
+            vol.Required(ATTR_DURATION): cv.positive_time_period,
+        },
+    )
+)
 
 
 async def async_setup_entry(
@@ -39,6 +59,11 @@ async def async_setup_entry(
         return
 
     async_add_entities(entities, True)
+
+    platform = async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_START_TIMER, SERVICE_TIMER_SCHEMA, "async_start_timer"
+    )
 
 
 class PuraSelectEntity(PuraEntity, SelectEntity):
@@ -70,6 +95,8 @@ class PuraSelectEntity(PuraEntity, SelectEntity):
         """Change the selected option."""
         if option == "Off":
             job = functools.partial(self.coordinator.api.stop_all, self._device_id)
+        elif self.get_device()["controller"] == "away":
+            raise PuraApiException(ERROR_AWAY_MODE)
         else:
             bay = self.options.index(option)
             job = functools.partial(
@@ -77,4 +104,19 @@ class PuraSelectEntity(PuraEntity, SelectEntity):
             )
 
         if await self.hass.async_add_executor_job(job):
+            await self.coordinator.async_request_refresh()
+
+    async def async_start_timer(
+        self, slot: int, intensity: int, duration: timedelta
+    ) -> None:
+        """Start a fragrance timer."""
+        if await self.hass.async_add_executor_job(
+            functools.partial(
+                self.coordinator.api.set_timer,
+                self._device_id,
+                bay=slot,
+                intensity=intensity,
+                end=duration,
+            )
+        ):
             await self.coordinator.async_request_refresh()
