@@ -3,13 +3,15 @@ from __future__ import annotations
 
 import functools
 
+from pypura import PuraApiException
+
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import DOMAIN, ERROR_AWAY_MODE
 from .entity import PuraDataUpdateCoordinator, PuraEntity
 
 NUMBER_DESCRIPTION = NumberEntityDescription(key="intensity", name="Intensity")
@@ -49,11 +51,6 @@ class PuraNumberEntity(PuraEntity, NumberEntity):
     _attr_native_min_value: int = 1
 
     @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return self._intensity_data["bay"] != 0
-
-    @property
     def native_value(self) -> int:
         """Return the value reported by the number."""
         return self._intensity_data["intensity"]
@@ -85,14 +82,21 @@ class PuraNumberEntity(PuraEntity, NumberEntity):
     async def async_set_native_value(self, value: int) -> None:
         """Update the current value."""
         data = self._intensity_data
-        if bay := data["bay"]:
-            if await self.hass.async_add_executor_job(
-                functools.partial(
-                    self.coordinator.api.set_intensity,
-                    self._device_id,
-                    bay=bay,
-                    controller=data["controller"],
-                    intensity=value,
-                )
-            ):
-                await self.coordinator.async_request_refresh()
+
+        if (controller := data["controller"]) == "away":
+            raise PuraApiException(ERROR_AWAY_MODE)
+        if not (bay := data["bay"]):
+            raise PuraApiException(
+                "No fragrance is currently active. Please select a fragrance before adjusting intensity."
+            )
+
+        if await self.hass.async_add_executor_job(
+            functools.partial(
+                self.coordinator.api.set_intensity,
+                self._device_id,
+                bay=bay,
+                controller=controller,
+                intensity=value,
+            )
+        ):
+            await self.coordinator.async_request_refresh()

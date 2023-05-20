@@ -6,16 +6,19 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
+from pypura import fragrance_name
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from pypura import fragrance_name
+from homeassistant.util.dt import UTC
 
 from .const import DOMAIN
 from .entity import PuraDataUpdateCoordinator, PuraEntity
@@ -32,11 +35,20 @@ class RequiredKeysMixin:
 class PuraSensorEntityDescription(SensorEntityDescription, RequiredKeysMixin):
     """Pura sensor entity description."""
 
+    icon_fn: Callable[[str], str | None] | None = None
+
+
+CONTROLLER_ICON = {
+    "away": "mdi:map-marker-radius-outline",
+    "default": "mdi:toggle-switch-outline",
+    "schedule": "mdi:calendar-blank-outline",
+    "timer": "mdi:timer-outline",
+}
 
 SENSORS = (
     PuraSensorEntityDescription(
         key="bay_1",
-        name="Slot 1",
+        name="Slot 1 fragrance",
         icon="mdi:scent",
         value_fn=lambda data: fragrance_name(data["bay_1"]["code"]),
     ),
@@ -45,11 +57,19 @@ SENSORS = (
         name="Slot 1 runtime",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda data: data["bay_1"]["wearing_time"],
     ),
     PuraSensorEntityDescription(
+        key="bay_1_installed",
+        name="Slot 1 installed",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: datetime.fromtimestamp(data["bay_1"]["id"], UTC),
+    ),
+    PuraSensorEntityDescription(
         key="bay_2",
-        name="Slot 2",
+        name="Slot 2 fragrance",
         icon="mdi:scent",
         value_fn=lambda data: fragrance_name(data["bay_2"]["code"]),
     ),
@@ -58,7 +78,22 @@ SENSORS = (
         name="Slot 2 runtime",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda data: data["bay_2"]["wearing_time"],
+    ),
+    PuraSensorEntityDescription(
+        key="bay_2_installed",
+        name="Slot 2 installed",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: datetime.fromtimestamp(data["bay_2"]["id"], UTC),
+    ),
+    PuraSensorEntityDescription(
+        key="controller",
+        name="Controller",
+        translation_key="controller",
+        value_fn=lambda data: data["controller"],
+        icon_fn=CONTROLLER_ICON.get,
     ),
 )
 
@@ -95,6 +130,12 @@ class PuraSensorEntity(PuraEntity, SensorEntity):
 
     entity_description: PuraSensorEntityDescription
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    @property
+    def icon(self) -> str | None:
+        if icon_fn := self.entity_description.icon_fn:
+            return icon_fn(self.native_value)
+        return super().icon
 
     @property
     def native_value(self) -> str | int | datetime | None:

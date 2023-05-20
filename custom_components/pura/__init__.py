@@ -3,11 +3,12 @@ from __future__ import annotations
 
 import logging
 
+from pypura import Pura, PuraAuthenticationError
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from pypura import Pura, PuraAuthenticationError
 
 from .const import CONF_ID_TOKEN, CONF_REFRESH_TOKEN, DOMAIN
 from .entity import PuraDataUpdateCoordinator

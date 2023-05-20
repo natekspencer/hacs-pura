@@ -1,9 +1,9 @@
 """Support for Pura switches."""
 from __future__ import annotations
 
-import functools
 from collections.abc import Callable
 from dataclasses import dataclass
+import functools
 from typing import Any
 
 from homeassistant.components.switch import (

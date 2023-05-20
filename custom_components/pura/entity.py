@@ -1,9 +1,11 @@
 """Pura entities."""
 from __future__ import annotations
 
-import logging
 from datetime import timedelta
+import logging
 from typing import Any
+
+from pypura import Pura
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -13,7 +15,6 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
 )
-from pypura import Pura
 
 from .const import DOMAIN
 
@@ -52,6 +53,7 @@ class PuraDataUpdateCoordinator(DataUpdateCoordinator):
         try:
             if devices := await self.hass.async_add_executor_job(self.api.get_devices):
                 self.devices = devices
+                _LOGGER.debug("Got devices: %s", devices)
         except Exception as err:  # pylint: disable=broad-except
             _LOGGER.error(
                 "Unknown Exception while updating Pura data: %s", err, exc_info=1

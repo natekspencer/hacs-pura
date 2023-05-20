@@ -4,11 +4,12 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from pypura import Pura, PuraAuthenticationError
 import voluptuous as vol
+
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
-from pypura import Pura, PuraAuthenticationError
 
 from .const import DOMAIN
 
