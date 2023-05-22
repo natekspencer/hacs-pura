@@ -25,7 +25,7 @@ SERVICE_START_TIMER = "start_timer"
 SERVICE_TIMER_SCHEMA = vol.All(
     cv.make_entity_service_schema(
         {
-            vol.Required(ATTR_SLOT): vol.All(vol.Coerce(int), vol.Range(min=1, max=2)),
+            vol.Optional(ATTR_SLOT): vol.All(vol.Coerce(int), vol.Range(min=1, max=2)),
             vol.Required(ATTR_INTENSITY): vol.All(
                 vol.Coerce(int), vol.Range(min=1, max=10)
             ),
@@ -107,9 +107,14 @@ class PuraSelectEntity(PuraEntity, SelectEntity):
             await self.coordinator.async_request_refresh()
 
     async def async_start_timer(
-        self, slot: int, intensity: int, duration: timedelta
+        self, *, slot: int | None = None, intensity: int, duration: timedelta
     ) -> None:
         """Start a fragrance timer."""
+        if not slot:
+            device = self.get_device()
+            runtime = "wearing_time"
+            slot = 1 if device["bay_1"][runtime] <= device["bay_2"][runtime] else 2
+
         if await self.hass.async_add_executor_job(
             functools.partial(
                 self.coordinator.api.set_timer,
