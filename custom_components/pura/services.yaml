@@ -11,10 +11,9 @@ start_timer:
   fields:
     slot:
       name: Slot
-      description: Fragrance slot
-      required: true
+      description: Fragrance slot. Leave blank to automatically select the fragrance with the most scent remaining (based on runtime).
+      required: false
       example: 1
-      default: 1
       selector:
         select:
           options:
@@ -22,7 +21,7 @@ start_timer:
             - "2"
     intensity:
       name: Intensity
-      description: Fragrance intensity
+      description: Fragrance intensity.
       required: true
       example: 4
       default: 4
@@ -32,7 +31,7 @@ start_timer:
           max: 10
     duration:
       name: Duration
-      description: Timer duration
+      description: Timer duration.
       required: true
       example: "hours: 4\nminutes: 0\nseconds: 0"
       default:

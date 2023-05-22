@@ -5,6 +5,7 @@ from datetime import timedelta
 import logging
 from typing import Any
 
+from deepdiff import DeepDiff
 from pypura import Pura
 
 from homeassistant.config_entries import ConfigEntry
@@ -52,11 +53,12 @@ class PuraDataUpdateCoordinator(DataUpdateCoordinator):
         """Update data via library, refresh token if necessary."""
         try:
             if devices := await self.hass.async_add_executor_job(self.api.get_devices):
+                diff = DeepDiff(self.devices, devices)
+                _LOGGER.debug("Devices updated: %s", diff if diff else "no changes")
                 self.devices = devices
-                _LOGGER.debug("Got devices: %s", devices)
         except Exception as err:  # pylint: disable=broad-except
             _LOGGER.error(
-                "Unknown Exception while updating Pura data: %s", err, exc_info=1
+                "Unknown exception while updating Pura data: %s", err, exc_info=1
             )
             raise UpdateFailed(err) from err
         return self.devices
