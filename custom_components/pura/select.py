@@ -58,7 +58,7 @@ async def async_setup_entry(
     if not entities:
         return
 
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
     platform = async_get_current_platform()
     platform.async_register_entity_service(

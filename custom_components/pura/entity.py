@@ -10,6 +10,7 @@ from pypura import Pura
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -86,6 +87,7 @@ class PuraEntity(CoordinatorEntity[PuraDataUpdateCoordinator]):
         device = self.get_device()
         name = device["room_name"]
         self._attr_device_info = DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, format_mac(device_id))},
             identifiers={(DOMAIN, device_id)},
             manufacturer="Pura",
             model=device.get("model"),

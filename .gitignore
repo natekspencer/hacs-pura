@@ -161,3 +161,6 @@ cython_debug/
 
 # Home Assistant config
 config/
+
+# Mac OS
+.DS_Store
