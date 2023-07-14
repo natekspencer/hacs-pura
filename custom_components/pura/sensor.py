@@ -21,7 +21,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import UTC
 
 from .const import DOMAIN
-from .entity import PuraDataUpdateCoordinator, PuraEntity
+from .entity import PuraDataUpdateCoordinator, PuraEntity, has_fragrance
 
 
 @dataclass
@@ -35,6 +35,7 @@ class RequiredKeysMixin:
 class PuraSensorEntityDescription(SensorEntityDescription, RequiredKeysMixin):
     """Pura sensor entity description."""
 
+    available_fn: Callable[[dict], bool] | None = None
     icon_fn: Callable[[str], str | None] | None = None
 
 
@@ -50,6 +51,7 @@ SENSORS = (
         key="bay_1",
         name="Slot 1 fragrance",
         icon="mdi:scent",
+        available_fn=lambda data: has_fragrance(data, 1),
         value_fn=lambda data: fragrance_name(data["bay_1"]["code"]),
     ),
     PuraSensorEntityDescription(
@@ -58,6 +60,7 @@ SENSORS = (
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        available_fn=lambda data: has_fragrance(data, 1),
         value_fn=lambda data: data["bay_1"]["wearing_time"],
     ),
     PuraSensorEntityDescription(
@@ -65,12 +68,14 @@ SENSORS = (
         name="Slot 1 installed",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_registry_enabled_default=False,
+        available_fn=lambda data: has_fragrance(data, 1),
         value_fn=lambda data: datetime.fromtimestamp(data["bay_1"]["id"], UTC),
     ),
     PuraSensorEntityDescription(
         key="bay_2",
         name="Slot 2 fragrance",
         icon="mdi:scent",
+        available_fn=lambda data: has_fragrance(data, 2),
         value_fn=lambda data: fragrance_name(data["bay_2"]["code"]),
     ),
     PuraSensorEntityDescription(
@@ -79,6 +84,7 @@ SENSORS = (
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        available_fn=lambda data: has_fragrance(data, 2),
         value_fn=lambda data: data["bay_2"]["wearing_time"],
     ),
     PuraSensorEntityDescription(
@@ -86,6 +92,7 @@ SENSORS = (
         name="Slot 2 installed",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_registry_enabled_default=False,
+        available_fn=lambda data: has_fragrance(data, 2),
         value_fn=lambda data: datetime.fromtimestamp(data["bay_2"]["id"], UTC),
     ),
     PuraSensorEntityDescription(
@@ -132,7 +139,15 @@ class PuraSensorEntity(PuraEntity, SensorEntity):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        if available_fn := self.entity_description.available_fn:
+            return available_fn(self.get_device())
+        return super().available
+
+    @property
     def icon(self) -> str | None:
+        """Return the icon to use in the frontend, if any."""
         if icon_fn := self.entity_description.icon_fn:
             return icon_fn(self.native_value)
         return super().icon
