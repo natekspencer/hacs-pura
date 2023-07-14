@@ -24,6 +24,11 @@ _LOGGER = logging.getLogger(__name__)
 UPDATE_INTERVAL = 30
 
 
+def has_fragrance(data: dict, bay: int) -> bool:
+    """Check if the specified bay has a fragrance."""
+    return bool(data.get(f"bay_{bay}", {}).get("code"))
+
+
 class PuraDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching data from the API."""
 
@@ -54,7 +59,13 @@ class PuraDataUpdateCoordinator(DataUpdateCoordinator):
         """Update data via library, refresh token if necessary."""
         try:
             if devices := await self.hass.async_add_executor_job(self.api.get_devices):
-                diff = DeepDiff(self.devices, devices)
+                diff = DeepDiff(
+                    self.devices,
+                    devices,
+                    ignore_order=True,
+                    report_repetition=True,
+                    verbose_level=2,
+                )
                 _LOGGER.debug("Devices updated: %s", diff if diff else "no changes")
                 self.devices = devices
         except Exception as err:  # pylint: disable=broad-except

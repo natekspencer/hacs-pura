@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_platform import (
 )
 
 from .const import ATTR_DURATION, ATTR_INTENSITY, ATTR_SLOT, DOMAIN, ERROR_AWAY_MODE
-from .entity import PuraDataUpdateCoordinator, PuraEntity
+from .entity import PuraDataUpdateCoordinator, PuraEntity, has_fragrance
 
 SELECT_DESCRIPTION = SelectEntityDescription(key="fragrance", name="Fragrance")
 
@@ -76,14 +76,18 @@ class PuraSelectEntity(PuraEntity, SelectEntity):
         if device["bay_1"]["active_at"]:
             return self.options[1]
         if device["bay_2"]["active_at"]:
-            return self.options[2]
+            return self.options[2 if has_fragrance(device, 1) else 1]
         return "Off"
 
     @property
     def options(self) -> list[str]:
         """Return a set of selectable options."""
-        dev = self.get_device()
-        opts = [f"Slot {i}: {fragrance_name(dev[f'bay_{i}']['code'])}" for i in (1, 2)]
+        device = self.get_device()
+        opts = [
+            f"Slot {i}: {fragrance_name(device[f'bay_{i}']['code'])}"
+            for i in (1, 2)
+            if has_fragrance(device, i)
+        ]
         return ["Off"] + opts
 
     @property
@@ -98,7 +102,8 @@ class PuraSelectEntity(PuraEntity, SelectEntity):
         elif self.get_device()["controller"] == "away":
             raise PuraApiException(ERROR_AWAY_MODE)
         else:
-            bay = self.options.index(option)
+            device = self.get_device()
+            bay = self.options.index(option) + (0 if has_fragrance(device, 1) else 1)
             job = functools.partial(
                 self.coordinator.api.set_always_on, self._device_id, bay=bay
             )
