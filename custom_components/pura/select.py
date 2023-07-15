@@ -17,7 +17,8 @@ from homeassistant.helpers.entity_platform import (
 )
 
 from .const import ATTR_DURATION, ATTR_INTENSITY, ATTR_SLOT, DOMAIN, ERROR_AWAY_MODE
-from .entity import PuraDataUpdateCoordinator, PuraEntity, has_fragrance
+from .coordinator import PuraDataUpdateCoordinator
+from .entity import PuraEntity, has_fragrance
 
 SELECT_DESCRIPTION = SelectEntityDescription(key="fragrance", name="Fragrance")
 
@@ -48,6 +49,7 @@ async def async_setup_entry(
             coordinator=coordinator,
             config_entry=config_entry,
             description=SELECT_DESCRIPTION,
+            device_type=device_type,
             device_id=device["device_id"],
         )
         for device_type, devices in coordinator.devices.items()

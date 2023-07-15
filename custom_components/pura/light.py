@@ -17,7 +17,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.color import color_rgb_to_hex, rgb_hex_to_rgb_list
 
 from .const import DOMAIN
-from .entity import PuraDataUpdateCoordinator, PuraEntity
+from .coordinator import PuraDataUpdateCoordinator
+from .entity import PuraEntity
 
 LIGHT_DESCRIPTION = LightEntityDescription(key="nightlight", name="Nightlight")
 
@@ -35,6 +36,7 @@ async def async_setup_entry(
             coordinator=coordinator,
             config_entry=config_entry,
             description=LIGHT_DESCRIPTION,
+            device_type=device_type,
             device_id=device["device_id"],
         )
         for device_type, devices in coordinator.devices.items()

@@ -1,8 +1,6 @@
 """The Pura integration."""
 from __future__ import annotations
 
-import logging
-
 from pypura import Pura, PuraAuthenticationError
 
 from homeassistant.config_entries import ConfigEntry
@@ -11,9 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import CONF_ID_TOKEN, CONF_REFRESH_TOKEN, DOMAIN
-from .entity import PuraDataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
+from .coordinator import PuraDataUpdateCoordinator
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,

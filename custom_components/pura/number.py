@@ -12,7 +12,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, ERROR_AWAY_MODE
-from .entity import PuraDataUpdateCoordinator, PuraEntity
+from .coordinator import PuraDataUpdateCoordinator
+from .entity import PuraEntity
 
 NUMBER_DESCRIPTION = NumberEntityDescription(key="intensity", name="Intensity")
 
@@ -30,6 +31,7 @@ async def async_setup_entry(
             coordinator=coordinator,
             config_entry=config_entry,
             description=NUMBER_DESCRIPTION,
+            device_type=device_type,
             device_id=device["device_id"],
         )
         for device_type, devices in coordinator.devices.items()
