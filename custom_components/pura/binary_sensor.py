@@ -16,7 +16,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .entity import PuraDataUpdateCoordinator, PuraEntity
+from .coordinator import PuraDataUpdateCoordinator
+from .entity import PuraEntity
 
 
 @dataclass
@@ -33,14 +34,24 @@ class PuraBinarySensorEntityDescription(
     """Pura binary sensor entity description."""
 
 
-SENSORS = (
-    PuraBinarySensorEntityDescription(
-        key="connected",
-        name="Connected",
-        device_class=BinarySensorDeviceClass.CONNECTIVITY,
-        on_fn=lambda data: data["connected"],
+SENSORS: dict[tuple[str, ...], tuple[PuraBinarySensorEntityDescription, ...]] = {
+    ("car"): (
+        PuraBinarySensorEntityDescription(
+            key="low_fragrance",
+            name="Low fragrance",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            on_fn=lambda data: data["bay_1"]["low_fragrance"],
+        ),
     ),
-)
+    ("wall"): (
+        PuraBinarySensorEntityDescription(
+            key="connected",
+            name="Connected",
+            device_class=BinarySensorDeviceClass.CONNECTIVITY,
+            on_fn=lambda data: data["connected"],
+        ),
+    ),
+}
 
 
 async def async_setup_entry(
@@ -56,12 +67,14 @@ async def async_setup_entry(
             coordinator=coordinator,
             config_entry=config_entry,
             description=description,
+            device_type=device_type,
             device_id=device["device_id"],
         )
+        for device_types, descriptions in SENSORS.items()
         for device_type, devices in coordinator.devices.items()
-        if device_type == "wall"
+        if device_type in device_types
         for device in devices
-        for description in SENSORS
+        for description in descriptions
     ]
 
     if not entities:
