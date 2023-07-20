@@ -18,6 +18,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .coordinator import PuraDataUpdateCoordinator
 from .entity import PuraEntity
+from .helpers import get_device_id
 
 
 @dataclass
@@ -68,7 +69,7 @@ async def async_setup_entry(
             config_entry=config_entry,
             description=description,
             device_type=device_type,
-            device_id=device["device_id"],
+            device_id=get_device_id(device),
         )
         for device_types, descriptions in SENSORS.items()
         for device_type, devices in coordinator.devices.items()

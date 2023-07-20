@@ -19,6 +19,7 @@ from homeassistant.util.color import color_rgb_to_hex, rgb_hex_to_rgb_list
 from .const import DOMAIN
 from .coordinator import PuraDataUpdateCoordinator
 from .entity import PuraEntity
+from .helpers import get_device_id
 
 LIGHT_DESCRIPTION = LightEntityDescription(key="nightlight", name="Nightlight")
 
@@ -37,7 +38,7 @@ async def async_setup_entry(
             config_entry=config_entry,
             description=LIGHT_DESCRIPTION,
             device_type=device_type,
-            device_id=device["device_id"],
+            device_id=get_device_id(device),
         )
         for device_type, devices in coordinator.devices.items()
         if device_type == "wall"
@@ -79,10 +80,10 @@ class PuraLightEntity(PuraEntity, LightEntity):
         """Get the nightlight data."""
         device = self.get_device()
         if (controller := device["controller"]) == "schedule":
-            controller = device["controlling_schedule"]
+            controller = device["controllingSchedule"]
             data = device["schedules"][controller]["nightlight"]
         else:
-            data = device["device_defaults"]["nightlight"]
+            data = device["deviceDefaults"]["nightlight"]
         return data | {"controller": str(controller)}
 
     async def async_turn_on(self, **kwargs: Any) -> None:

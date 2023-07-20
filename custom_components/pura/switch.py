@@ -19,12 +19,14 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .coordinator import PuraDataUpdateCoordinator
 from .entity import PuraEntity
+from .helpers import get_device_id
 
 
 @dataclass
 class RequiredKeysMixin:
     """Required keys mixin."""
 
+    lookup_key: str
     toggle_fn: Callable[[PuraEntity, bool], tuple[Callable[..., True], dict]]
 
 
@@ -37,6 +39,7 @@ SWITCHES = (
     PuraSwitchEntityDescription(
         key="ambient_mode",
         name="Ambient mode",
+        lookup_key="ambientMode",
         toggle_fn=lambda self, value: (
             self.coordinator.api.set_ambient_mode,
             {"ambient_mode": value},
@@ -45,13 +48,14 @@ SWITCHES = (
     PuraSwitchEntityDescription(
         key="away_mode",
         name="Away mode",
+        lookup_key="awayMode",
         toggle_fn=lambda self, value: (
             self.coordinator.api.set_away_mode,
             {"away_mode": value}
             | (
                 {
                     k: v
-                    for k, v in self.get_device()["device_location"].items()
+                    for k, v in self.get_device()["deviceLocation"].items()
                     if k in ("radius", "longitude", "latitude")
                 }
                 if value
@@ -76,7 +80,7 @@ async def async_setup_entry(
             config_entry=config_entry,
             description=description,
             device_type=device_type,
-            device_id=device["device_id"],
+            device_id=get_device_id(device),
         )
         for device_type, devices in coordinator.devices.items()
         if device_type == "wall"
@@ -105,7 +109,7 @@ class PuraSwitchEntity(PuraEntity, SwitchEntity):
     @property
     def _data(self) -> dict:
         """Get the fragrance data."""
-        return self.get_device()[self.entity_description.key]
+        return self.get_device().get(self.entity_description.lookup_key)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
