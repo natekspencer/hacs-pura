@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
+from .helpers import get_device_id
 
 _LOGGER = logging.getLogger(__name__)
 UPDATE_INTERVAL = 30
@@ -38,7 +39,7 @@ class PuraDataUpdateCoordinator(DataUpdateCoordinator):
             (
                 device
                 for device in self.devices[device_type]
-                if device["device_id"] == device_id
+                if get_device_id(device) == device_id
             ),
             None,
         )

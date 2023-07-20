@@ -14,6 +14,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN, ERROR_AWAY_MODE
 from .coordinator import PuraDataUpdateCoordinator
 from .entity import PuraEntity
+from .helpers import get_device_id
 
 NUMBER_DESCRIPTION = NumberEntityDescription(key="intensity", name="Intensity")
 
@@ -32,7 +33,7 @@ async def async_setup_entry(
             config_entry=config_entry,
             description=NUMBER_DESCRIPTION,
             device_type=device_type,
-            device_id=device["device_id"],
+            device_id=get_device_id(device),
         )
         for device_type, devices in coordinator.devices.items()
         if device_type == "wall"
@@ -62,20 +63,20 @@ class PuraNumberEntity(PuraEntity, NumberEntity):
         """Get the intensity data."""
         device = self.get_device()
         if (controller := device["controller"]) == "schedule":
-            controller = device["controlling_schedule"]
+            controller = device["controllingSchedule"]
             bay = (schedule := device["schedules"][controller])["bay"]
             intensity = schedule["intensity"]
         elif controller == "timer":
             bay = (timer := device["timer"])["bay"]
             intensity = timer["intensity"]
         else:
-            defaults = device["device_defaults"]
-            if device["bay_1"]["active_at"]:
+            defaults = device["deviceDefaults"]
+            if device["bay1"]["activeAt"]:
                 bay = 1
-                intensity = defaults["bay_1_intensity"]
-            elif device["bay_2"]["active_at"]:
+                intensity = defaults["bay1Intensity"]
+            elif device["bay2"]["activeAt"]:
                 bay = 2
-                intensity = defaults["bay_2_intensity"]
+                intensity = defaults["bay2Intensity"]
             else:  # fragrance is off
                 bay = 0
                 intensity = 0

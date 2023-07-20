@@ -23,6 +23,7 @@ from homeassistant.util.dt import UTC
 from .const import DOMAIN
 from .coordinator import PuraDataUpdateCoordinator
 from .entity import PuraEntity, has_fragrance
+from .helpers import first_key_value, get_device_id
 
 
 @dataclass
@@ -88,7 +89,7 @@ SENSORS: dict[tuple[str, ...], tuple[PuraSensorEntityDescription, ...]] = {
             name="Slot 1 fragrance",
             icon="mdi:scent",
             available_fn=lambda data: has_fragrance(data, 1),
-            value_fn=lambda data: fragrance_name(data["bay_1"]["code"]),
+            value_fn=lambda data: fragrance_name(data["bay1"]["code"]),
         ),
         PuraSensorEntityDescription(
             key="bay_1_runtime",
@@ -97,7 +98,7 @@ SENSORS: dict[tuple[str, ...], tuple[PuraSensorEntityDescription, ...]] = {
             native_unit_of_measurement=UnitOfTime.SECONDS,
             state_class=SensorStateClass.TOTAL_INCREASING,
             available_fn=lambda data: has_fragrance(data, 1),
-            value_fn=lambda data: data["bay_1"]["wearing_time"],
+            value_fn=lambda data: data["bay1"]["wearingTime"],
         ),
         PuraSensorEntityDescription(
             key="bay_1_installed",
@@ -105,14 +106,14 @@ SENSORS: dict[tuple[str, ...], tuple[PuraSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.TIMESTAMP,
             entity_registry_enabled_default=False,
             available_fn=lambda data: has_fragrance(data, 1),
-            value_fn=lambda data: datetime.fromtimestamp(data["bay_1"]["id"], UTC),
+            value_fn=lambda data: datetime.fromtimestamp(data["bay1"]["id"], UTC),
         ),
         PuraSensorEntityDescription(
             key="bay_2",
             name="Slot 2 fragrance",
             icon="mdi:scent",
             available_fn=lambda data: has_fragrance(data, 2),
-            value_fn=lambda data: fragrance_name(data["bay_2"]["code"]),
+            value_fn=lambda data: fragrance_name(data["bay2"]["code"]),
         ),
         PuraSensorEntityDescription(
             key="bay_2_runtime",
@@ -121,7 +122,7 @@ SENSORS: dict[tuple[str, ...], tuple[PuraSensorEntityDescription, ...]] = {
             native_unit_of_measurement=UnitOfTime.SECONDS,
             state_class=SensorStateClass.TOTAL_INCREASING,
             available_fn=lambda data: has_fragrance(data, 2),
-            value_fn=lambda data: data["bay_2"]["wearing_time"],
+            value_fn=lambda data: data["bay2"]["wearingTime"],
         ),
         PuraSensorEntityDescription(
             key="bay_2_installed",
@@ -129,7 +130,7 @@ SENSORS: dict[tuple[str, ...], tuple[PuraSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.TIMESTAMP,
             entity_registry_enabled_default=False,
             available_fn=lambda data: has_fragrance(data, 2),
-            value_fn=lambda data: datetime.fromtimestamp(data["bay_2"]["id"], UTC),
+            value_fn=lambda data: datetime.fromtimestamp(data["bay2"]["id"], UTC),
         ),
         PuraSensorEntityDescription(
             key="controller",
@@ -156,7 +157,7 @@ async def async_setup_entry(
             config_entry=config_entry,
             description=description,
             device_type=device_type,
-            device_id=device["device_id"],
+            device_id=get_device_id(device),
         )
         for device_types, descriptions in SENSORS.items()
         for device_type, devices in coordinator.devices.items()

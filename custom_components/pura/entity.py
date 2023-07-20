@@ -14,13 +14,14 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import PuraDataUpdateCoordinator
+from .helpers import first_key_value
 
 UPDATE_INTERVAL = 30
 
 
 def has_fragrance(data: dict, bay: int) -> bool:
     """Check if the specified bay has a fragrance."""
-    return bool(data.get(f"bay_{bay}", {}).get("code"))
+    return bool(first_key_value(data, (f"bay_{bay}", f"bay{bay}"), {}).get("code"))
 
 
 class PuraEntity(CoordinatorEntity[PuraDataUpdateCoordinator]):
@@ -45,7 +46,7 @@ class PuraEntity(CoordinatorEntity[PuraDataUpdateCoordinator]):
         self._attr_unique_id = f"{device_id}-{description.key}"
 
         device = self.get_device()
-        name = device["room_name"] if device_type == "wall" else device["device_name"]
+        name = device["roomName"] if device_type == "wall" else device["device_name"]
         self._attr_device_info = DeviceInfo(
             connections={
                 (
@@ -60,8 +61,8 @@ class PuraEntity(CoordinatorEntity[PuraDataUpdateCoordinator]):
             model=device.get("model"),
             name=f"{name} Diffuser",
             suggested_area=name if device_type == "wall" else None,
-            sw_version=device["fw_version"],
-            hw_version=device["hw_version"],
+            sw_version=first_key_value(device, ("fw_version", "fwVersion")),
+            hw_version=first_key_value(device, ("hw_version", "hwVersion")),
         )
 
     def get_device(self) -> dict | None:

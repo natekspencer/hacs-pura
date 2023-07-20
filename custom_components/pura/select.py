@@ -19,6 +19,7 @@ from homeassistant.helpers.entity_platform import (
 from .const import ATTR_DURATION, ATTR_INTENSITY, ATTR_SLOT, DOMAIN, ERROR_AWAY_MODE
 from .coordinator import PuraDataUpdateCoordinator
 from .entity import PuraEntity, has_fragrance
+from .helpers import get_device_id
 
 SELECT_DESCRIPTION = SelectEntityDescription(key="fragrance", name="Fragrance")
 
@@ -50,7 +51,7 @@ async def async_setup_entry(
             config_entry=config_entry,
             description=SELECT_DESCRIPTION,
             device_type=device_type,
-            device_id=device["device_id"],
+            device_id=get_device_id(device),
         )
         for device_type, devices in coordinator.devices.items()
         if device_type == "wall"
@@ -75,9 +76,9 @@ class PuraSelectEntity(PuraEntity, SelectEntity):
     def current_option(self) -> str:
         """Return the selected entity option to represent the entity state."""
         device = self.get_device()
-        if device["bay_1"]["active_at"]:
+        if device["bay1"]["activeAt"]:
             return self.options[1]
-        if device["bay_2"]["active_at"]:
+        if device["bay2"]["activeAt"]:
             return self.options[2 if has_fragrance(device, 1) else 1]
         return "Off"
 
@@ -86,7 +87,7 @@ class PuraSelectEntity(PuraEntity, SelectEntity):
         """Return a set of selectable options."""
         device = self.get_device()
         opts = [
-            f"Slot {i}: {fragrance_name(device[f'bay_{i}']['code'])}"
+            f"Slot {i}: {fragrance_name(device[f'bay{i}']['code'])}"
             for i in (1, 2)
             if has_fragrance(device, i)
         ]
@@ -119,8 +120,8 @@ class PuraSelectEntity(PuraEntity, SelectEntity):
         """Start a fragrance timer."""
         if not slot:
             device = self.get_device()
-            runtime = "wearing_time"
-            slot = 1 if device["bay_1"][runtime] <= device["bay_2"][runtime] else 2
+            runtime = "wearingTime"
+            slot = 1 if device["bay1"][runtime] <= device["bay2"][runtime] else 2
 
         if await self.hass.async_add_executor_job(
             functools.partial(
