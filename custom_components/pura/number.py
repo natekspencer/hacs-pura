@@ -66,7 +66,7 @@ class PuraNumberEntity(PuraEntity, NumberEntity):
             controller = device["controllingSchedule"]
             bay = (schedule := device["schedules"][controller])["bay"]
             intensity = schedule["intensity"]
-        elif controller == "timer":
+        elif controller == "timer" and controller in device:
             bay = (timer := device["timer"])["bay"]
             intensity = timer["intensity"]
         else:
