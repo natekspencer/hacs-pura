@@ -74,7 +74,7 @@ SENSORS: dict[tuple[str, ...], tuple[PuraSensorEntityDescription, ...]] = {
             ),
         ),
         PuraSensorEntityDescription(
-            key="runtime",
+            key="runtime_remaining",
             name="Runtime remaining",
             device_class=SensorDeviceClass.DURATION,
             native_unit_of_measurement=UnitOfTime.HOURS,
