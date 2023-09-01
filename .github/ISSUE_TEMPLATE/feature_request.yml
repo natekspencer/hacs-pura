@@ -1,0 +1,30 @@
+name: Request a feature
+description: Suggest an idea or request a missing feature.
+body:
+  - type: textarea
+    validations:
+      required: true
+    attributes:
+      label: The request
+      description: >-
+        Is there a feature available in the Pura app that is missing here or you wish was done differently? Let me know!
+  - type: textarea
+    attributes:
+      label: Screenshots
+      placeholder: "drag-and-drop relevant screenshots here"
+      description: >-
+        Please provide any relevant screenshots from the Pura app for the requested feature.
+  - type: checkboxes
+    attributes:
+      label: Which Pura device(s) is this request for?
+      description: You may select more than one.
+      options:
+        - label: Pura 3
+        - label: Pura 4
+        - label: Pura Car
+        - label: Other (please specify in the additional information field below)
+  - type: textarea
+    attributes:
+      label: Additional information
+      description: >
+        If you have any additional information, use the field below.
