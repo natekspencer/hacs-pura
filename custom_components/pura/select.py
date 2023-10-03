@@ -118,10 +118,18 @@ class PuraSelectEntity(PuraEntity, SelectEntity):
         self, *, slot: int | None = None, intensity: int, duration: timedelta
     ) -> None:
         """Start a fragrance timer."""
+        device = self.get_device()
+        if not (fragrance_bays := [i for i in (1, 2) if has_fragrance(device, i)]):
+            raise PuraApiException("Diffuser does not have any fragrances")
+
         if not slot:
-            device = self.get_device()
-            runtime = "wearingTime"
-            slot = 1 if device["bay1"][runtime] <= device["bay2"][runtime] else 2
+            if len(fragrance_bays) == 1:
+                slot = fragrance_bays[0]
+            else:
+                runtime = "wearingTime"
+                slot = 1 if device["bay1"][runtime] <= device["bay2"][runtime] else 2
+        elif slot not in fragrance_bays:
+            raise PuraApiException(f"Slot {slot} does not have a fragrance installed")
 
         if await self.hass.async_add_executor_job(
             functools.partial(
