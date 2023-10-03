@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_platform import (
     async_get_current_platform,
 )
 
-from .const import ATTR_DURATION, ATTR_INTENSITY, ATTR_SLOT, DOMAIN, ERROR_AWAY_MODE
+from .const import ATTR_DURATION, ATTR_INTENSITY, ATTR_SLOT, DOMAIN, ERROR_AWAY_MODE, ERROR_NO_SLOTS_INSTALLED
 from .coordinator import PuraDataUpdateCoordinator
 from .entity import PuraEntity, has_fragrance
 from .helpers import get_device_id
@@ -121,7 +121,16 @@ class PuraSelectEntity(PuraEntity, SelectEntity):
         if not slot:
             device = self.get_device()
             runtime = "wearingTime"
-            slot = 1 if device["bay1"][runtime] <= device["bay2"][runtime] else 2
+            installed_slots: list[int] = []
+            for i in (1,2):
+                if has_fragrance(device, i):
+                    installed_slots.append(i)
+            if len(installed_slots) == 2:
+                slot = 1 if device["bay1"][runtime] <= device["bay2"][runtime] else 2
+            else:
+                if not installed_slots:
+                    raise PuraApiException(ERROR_NO_SLOTS_INSTALLED)
+                slot = installed_slots[0]
 
         if await self.hass.async_add_executor_job(
             functools.partial(
