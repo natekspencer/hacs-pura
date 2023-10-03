@@ -18,6 +18,8 @@ from .helpers import first_key_value
 
 UPDATE_INTERVAL = 30
 
+PURA_MODEL_MAP = {1: "Pura 3", "car": "Pura Car"}
+
 
 def has_fragrance(data: dict, bay: int) -> bool:
     """Check if the specified bay has a fragrance."""
@@ -58,7 +60,7 @@ class PuraEntity(CoordinatorEntity[PuraDataUpdateCoordinator]):
             },
             identifiers={(DOMAIN, device_id)},
             manufacturer="Pura",
-            model=device.get("model"),
+            model=PURA_MODEL_MAP.get(model := device.get("model"), model),
             name=f"{name} Diffuser",
             suggested_area=name if device_type == "wall" else None,
             sw_version=first_key_value(device, ("fw_version", "fwVersion")),
