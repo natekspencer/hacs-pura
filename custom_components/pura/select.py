@@ -118,18 +118,15 @@ class PuraSelectEntity(PuraEntity, SelectEntity):
         self, *, slot: int | None = None, intensity: int, duration: timedelta
     ) -> None:
         """Start a fragrance timer."""
-        installed_slots: list[int] = []
         device = self.get_device()
-        for i in (1,2):
-            if has_fragrance(device, i):
-                installed_slots.append(i)
+        installed_slots: list[int] = [i for i in (1,2) if has_fragrance(device, i)]
+        if not installed_slots:
+            raise PuraApiException(ERROR_NO_SLOTS_INSTALLED)
         if not slot:
             runtime = "wearingTime"
             if len(installed_slots) == 2:
                 slot = 1 if device["bay1"][runtime] <= device["bay2"][runtime] else 2
             else:
-                if not installed_slots:
-                    raise PuraApiException(ERROR_NO_SLOTS_INSTALLED)
                 slot = installed_slots[0]
         else:
             if slot not in installed_slots:
