@@ -13,4 +13,3 @@ ATTR_INTENSITY: Final = "intensity"
 ATTR_DURATION: Final = "duration"
 
 ERROR_AWAY_MODE: Final = "Away mode is currently active. Return to your space or disable away mode in order to control your diffuser."
-ERROR_NO_SLOTS_INSTALLED: Final = "No fragrances are installed."

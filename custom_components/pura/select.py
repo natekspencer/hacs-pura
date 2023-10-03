@@ -16,14 +16,7 @@ from homeassistant.helpers.entity_platform import (
     async_get_current_platform,
 )
 
-from .const import (
-    ATTR_DURATION,
-    ATTR_INTENSITY,
-    ATTR_SLOT,
-    DOMAIN,
-    ERROR_AWAY_MODE,
-    ERROR_NO_SLOTS_INSTALLED,
-)
+from .const import ATTR_DURATION, ATTR_INTENSITY, ATTR_SLOT, DOMAIN, ERROR_AWAY_MODE
 from .coordinator import PuraDataUpdateCoordinator
 from .entity import PuraEntity, has_fragrance
 from .helpers import get_device_id
@@ -126,20 +119,17 @@ class PuraSelectEntity(PuraEntity, SelectEntity):
     ) -> None:
         """Start a fragrance timer."""
         device = self.get_device()
-        if not (installed_slots := [i for i in (1, 2) if has_fragrance(device, i)]):
-            raise PuraApiException(ERROR_NO_SLOTS_INSTALLED)
+        if not (fragrance_bays := [i for i in (1, 2) if has_fragrance(device, i)]):
+            raise PuraApiException("Diffuser does not have any fragrances")
 
         if not slot:
-            runtime = "wearingTime"
-            if len(installed_slots) == 1:
-                slot = installed_slots[0]
+            if len(fragrance_bays) == 1:
+                slot = fragrance_bays[0]
             else:
+                runtime = "wearingTime"
                 slot = 1 if device["bay1"][runtime] <= device["bay2"][runtime] else 2
-
-        if slot not in installed_slots:
-            raise PuraApiException(
-                f"Slot {slot} does not have a fragrance vial installed"
-            )
+        elif slot not in fragrance_bays:
+            raise PuraApiException(f"Slot {slot} does not have a fragrance installed")
 
         if await self.hass.async_add_executor_job(
             functools.partial(
