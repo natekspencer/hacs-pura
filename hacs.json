@@ -3,5 +3,7 @@
   "domains": ["binary_sensor", "light", "number", "select", "sensor", "switch"],
   "homeassistant": "2023.3.0",
   "iot_class": "Cloud Polling",
-  "render_readme": true
+  "render_readme": true,
+  "zip_release": true,
+  "filename": "pura.zip"
 }
