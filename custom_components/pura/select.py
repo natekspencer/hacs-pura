@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 import functools
 
-from pypura import PuraApiException, fragrance_name
+from pypura import PuraApiException
 import voluptuous as vol
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
@@ -21,7 +21,9 @@ from .coordinator import PuraDataUpdateCoordinator
 from .entity import PuraEntity, has_fragrance
 from .helpers import get_device_id
 
-SELECT_DESCRIPTION = SelectEntityDescription(key="fragrance", name="Fragrance")
+SELECT_DESCRIPTION = SelectEntityDescription(
+    key="fragrance", translation_key="fragrance"
+)
 
 SERVICE_START_TIMER = "start_timer"
 SERVICE_TIMER_SCHEMA = vol.All(
@@ -77,36 +79,30 @@ class PuraSelectEntity(PuraEntity, SelectEntity):
         """Return the selected entity option to represent the entity state."""
         device = self.get_device()
         if device["bay1"]["activeAt"]:
-            return self.options[1]
+            return "slot_1"
         if device["bay2"]["activeAt"]:
-            return self.options[2 if has_fragrance(device, 1) else 1]
-        return "Off"
+            return "slot_2"
+        return "off"
 
     @property
     def options(self) -> list[str]:
         """Return a set of selectable options."""
         device = self.get_device()
-        opts = [
-            f"Slot {i}: {fragrance_name(device[f'bay{i}']['code'])}"
-            for i in (1, 2)
-            if has_fragrance(device, i)
-        ]
-        return ["Off"] + opts
+        return ["off"] + [f"slot_{i}" for i in (1, 2) if has_fragrance(device, i)]
 
     @property
     def icon(self) -> str:
         """Return the icon to use in the frontend."""
-        return f"mdi:scent{'-off' if self.current_option=='Off' else ''}"
+        return f"mdi:scent{'-off' if self.current_option=='off' else ''}"
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        if option == "Off":
+        if option == "off":
             job = functools.partial(self.coordinator.api.stop_all, self._device_id)
         elif self.get_device()["controller"] == "away":
             raise PuraApiException(ERROR_AWAY_MODE)
         else:
-            device = self.get_device()
-            bay = self.options.index(option) + (0 if has_fragrance(device, 1) else 1)
+            bay = int(option.replace("slot_", ""))
             job = functools.partial(
                 self.coordinator.api.set_always_on, self._device_id, bay=bay
             )
