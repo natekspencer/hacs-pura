@@ -26,8 +26,25 @@
     }
   },
   "entity": {
+    "select": {
+      "fragrance": {
+        "name": "Fragrance",
+        "state": {
+          "off": "Off",
+          "slot_1": "Slot 1",
+          "slot_2": "Slot 2"
+        }
+      }
+    },
     "sensor": {
+      "active_fragrance": {
+        "name": "Active fragrance",
+        "state": {
+          "none": "None"
+        }
+      },
       "controller": {
+        "name": "Controller",
         "state": {
           "away": "Away",
           "default": "Default",
