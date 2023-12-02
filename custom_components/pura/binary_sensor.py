@@ -60,7 +60,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up Pura binary_sensors using config entry."""
+    """Set up Pura binary sensors using config entry."""
     coordinator: PuraDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     entities = [
