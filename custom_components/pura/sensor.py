@@ -30,7 +30,7 @@ from .helpers import get_device_id
 class RequiredKeysMixin:
     """Required keys mixin."""
 
-    value_fn: Callable[[dict], Any]
+    value_fn: Callable[[dict], Any | None]
 
 
 @dataclass
@@ -56,7 +56,7 @@ SENSORS: dict[tuple[str, ...], tuple[PuraSensorEntityDescription, ...]] = {
             entity_category=EntityCategory.DIAGNOSTIC,
             icon="mdi:scent",
             available_fn=lambda data: has_fragrance(data, 1),
-            value_fn=lambda data: data["bay_1"]["name"],
+            value_fn=lambda data: data["bay_1"].get("name"),
         ),
         PuraSensorEntityDescription(
             key="intensity",
