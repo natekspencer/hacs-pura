@@ -1,6 +1,8 @@
 """Pura entities."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import (
     CONNECTION_BLUETOOTH,
@@ -16,7 +18,15 @@ from .helpers import first_key_value
 
 UPDATE_INTERVAL = 30
 
-PURA_MODEL_MAP = {1: "Pura 3", "car": "Pura Car"}
+PURA_MODEL_MAP = {1: "Wall", 2: "Car", "car": "Car", 3: "Plus", 4: "Mini"}
+
+
+def determine_pura_model(data: dict[str, Any]) -> str | None:
+    """Determine pura device model."""
+    if (model := PURA_MODEL_MAP.get(m := data.get("model"), m)) == "Wall":
+        version = data.get("hwVersion", "3").split(".", 1)[0]
+        model = "3" if version in ("1", "2") else version
+    return f"Pura {model}"
 
 
 def has_fragrance(data: dict, bay: int) -> bool:
@@ -58,7 +68,7 @@ class PuraEntity(CoordinatorEntity[PuraDataUpdateCoordinator]):
             },
             identifiers={(DOMAIN, device_id)},
             manufacturer="Pura",
-            model=PURA_MODEL_MAP.get(model := device.get("model"), model),
+            model=determine_pura_model(device),
             name=f"{name} Diffuser",
             suggested_area=name if device_type == "wall" else None,
             sw_version=first_key_value(device, ("fw_version", "fwVersion")),
