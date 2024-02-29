@@ -55,7 +55,7 @@ class PuraLightEntity(PuraEntity, LightEntity):
     """Pura Light."""
 
     _attr_color_mode = ColorMode.RGB
-    _attr_supported_color_modes = {ColorMode.BRIGHTNESS, ColorMode.RGB}
+    _attr_supported_color_modes = {ColorMode.RGB}
 
     @property
     def is_on(self) -> bool:
