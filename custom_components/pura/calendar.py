@@ -1,0 +1,143 @@
+"""Support for Pura diffuser schedule."""
+from __future__ import annotations
+
+from datetime import datetime, timedelta
+import logging
+
+from ical.calendar import Calendar
+from ical.event import Event
+from ical.types import Recur
+from pypura import fragrance_name
+
+from homeassistant.components.calendar import CalendarEntity, CalendarEvent
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
+
+from .const import DOMAIN
+from .coordinator import PuraDataUpdateCoordinator
+
+_LOGGER = logging.getLogger(__name__)
+
+SCHEDULE = EntityDescription(key="schedule")
+
+ONE_DAY = timedelta(days=1)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up Pura schedule calendar using config entry."""
+    coordinator: PuraDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    entities = [
+        PuraCalendarEntity(
+            coordinator=coordinator, config_entry=config_entry, description=SCHEDULE
+        )
+    ]
+    async_add_entities(entities)
+
+
+class PuraCalendarEntity(CoordinatorEntity[PuraDataUpdateCoordinator], CalendarEntity):
+    """Pura calendar entity."""
+
+    _calendar: Calendar | None = None
+
+    _attr_has_entity_name = True
+    _attr_name = "Pura"
+
+    def __init__(
+        self,
+        coordinator: PuraDataUpdateCoordinator,
+        config_entry: ConfigEntry,
+        description: EntityDescription,
+    ) -> None:
+        """Construct a PuraEntity."""
+        super().__init__(coordinator)
+        self._config_entry = config_entry
+        self.entity_description = description
+        self._attr_unique_id = f"{config_entry.entry_id}-{description.key}"
+
+    @property
+    def event(self) -> CalendarEvent | None:
+        """Return the next upcoming event."""
+        if not self._calendar:
+            return None
+
+        now = dt_util.now()
+        events = self._calendar.timeline_tz(now.tzinfo).active_after(now)
+        if not (event := next(events, None)):
+            return None
+        return _get_calendar_event(event)
+
+    async def async_get_events(
+        self, hass: HomeAssistant, start_date: datetime, end_date: datetime
+    ) -> list[CalendarEvent]:
+        """Get all events in a specific time frame."""
+        if not self._calendar:
+            return []
+
+        events = self._calendar.timeline_tz(start_date.tzinfo).overlapping(
+            start_date, end_date
+        )
+        return [_get_calendar_event(event) for event in events]
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        now = dt_util.now()
+        self._calendar = Calendar()
+        self._calendar.events.extend(
+            Event(
+                summary=f"{schedule['name']} - {device['roomName']}",
+                start=_parse_datetime(now, schedule["start"], schedule["disableUntil"]),
+                end=_parse_datetime(now, schedule["end"], schedule["disableUntil"]),
+                description=f'Fragrance slot {schedule["bay"]} ('
+                + fragrance_name(device[f'bay{schedule["bay"]}']["code"])
+                + f')\nIntensity {schedule["intensity"]}',
+                uid=schedule["id"],
+                rrule=Recur.from_rrule(
+                    f'FREQ=WEEKLY;BYDAY={",".join(day[:2].upper() for day in schedule["days"] if schedule["days"][day])};INTERVAL=1'
+                ),
+            )
+            for device in self.coordinator.devices.get("wall", [])
+            for schedule in device.get("schedules", [])
+            if schedule["disableUntil"] != -1
+        )
+
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        self._handle_coordinator_update()
+        await super().async_added_to_hass()
+
+
+def _parse_datetime(
+    now: datetime, time_str: str, disable_until: int | None = None
+) -> datetime | None:
+    """Parse datetime."""
+    _date = dt_util.dt.datetime.combine(now, _parse_time(time_str), now.tzinfo)
+    if disable_until and _date <= datetime.fromtimestamp(disable_until, now.tzinfo):
+        _date += ONE_DAY
+    return _date
+
+
+def _parse_time(time_str: str) -> dt_util.dt.time | None:
+    """Parse time."""
+    return dt_util.parse_time(f"{time_str[:2]}:{time_str[2:]}")
+
+
+def _get_calendar_event(event: Event) -> CalendarEvent:
+    """Return a CalendarEvent from an iCal Event."""
+    return CalendarEvent(
+        summary=event.summary,
+        start=dt_util.as_local(event.start),
+        end=dt_util.as_local(event.end),
+        description=event.description,
+        rrule=event.rrule.as_rrule_str(),
+    )
