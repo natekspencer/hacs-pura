@@ -6,6 +6,7 @@ numpy
 # Integration
 pypura
 deepdiff
+ical
 
 # Development
 black

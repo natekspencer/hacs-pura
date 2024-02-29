@@ -15,6 +15,7 @@ from .helpers import get_device_id
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.CALENDAR,
     Platform.LIGHT,
     Platform.NUMBER,
     Platform.SELECT,
