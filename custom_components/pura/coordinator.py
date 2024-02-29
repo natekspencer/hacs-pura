@@ -63,3 +63,34 @@ class PuraDataUpdateCoordinator(DataUpdateCoordinator):
             )
             raise UpdateFailed(err) from err
         return self.devices
+
+
+class PuraCarFirmwareDataUpdateCoordinator(DataUpdateCoordinator):
+    """Class to manage fetching data from the API."""
+
+    def __init__(self, hass: HomeAssistant, client: Pura) -> None:
+        """Initialize."""
+        self.api = client
+
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_interval=timedelta(seconds=UPDATE_INTERVAL),
+        )
+
+    async def _async_update_data(self):
+        """Update data via library, refresh token if necessary."""
+        try:
+            details: str = await self.hass.async_add_executor_job(
+                self.api.get_latest_firmware_details, "car", "v1"
+            )
+            return {
+                (part := line.split("=", 1))[0].lower(): part[1]
+                for line in details.split("\r\n")
+            }
+        except Exception as err:  # pylint: disable=broad-except
+            _LOGGER.error(
+                "Unknown exception while updating Pura data: %s", err, exc_info=1
+            )
+            raise UpdateFailed(err) from err

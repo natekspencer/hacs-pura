@@ -1,0 +1,95 @@
+"""Support for Pura update."""
+from __future__ import annotations
+
+from dataclasses import dataclass
+import logging
+
+from homeassistant.components.update import (
+    UpdateDeviceClass,
+    UpdateEntity,
+    UpdateEntityDescription,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from .const import DOMAIN
+from .coordinator import PuraDataUpdateCoordinator
+from .entity import PuraEntity
+from .helpers import get_device_id
+
+_LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class RequiredKeysMixin:
+    """Required keys mixin."""
+
+    lookup_key: str
+
+
+@dataclass
+class PuraUpdateEntityDescription(UpdateEntityDescription, RequiredKeysMixin):
+    """Pura update entity description."""
+
+
+UPDATE = PuraUpdateEntityDescription(key="firmware", lookup_key="fw_version")
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up Pura updates using config entry."""
+    coordinator: PuraDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+
+    entities = [
+        PuraUpdateEntity(
+            coordinator=coordinator,
+            config_entry=config_entry,
+            description=UPDATE,
+            device_type=device_type,
+            device_id=get_device_id(device),
+        )
+        for device_type, devices in coordinator.devices.items()
+        if device_type == "car"
+        for device in devices
+    ]
+
+    if not entities:
+        return
+
+    async_add_entities(entities, True)
+
+
+class PuraUpdateEntity(PuraEntity, UpdateEntity):
+    """Pura update."""
+
+    entity_description: PuraUpdateEntityDescription
+    _attr_device_class = UpdateDeviceClass.FIRMWARE
+    _attr_should_poll = True
+    _attr_release_summary = (
+        "https://help.pura.com/en/car_diffuser/Update-Pura-Car-Firmware"
+    )
+
+    @property
+    def installed_version(self) -> str | None:
+        """Version installed and in use."""
+        return self.get_device().get(self.entity_description.lookup_key)
+
+    async def async_update(self) -> None:
+        """Update the entity."""
+        try:
+            details: str = await self.hass.async_add_executor_job(
+                self.coordinator.api.get_latest_firmware_details, "car", "v1"
+            )
+            firmware = {
+                (part := line.split("=", 1))[0].lower(): part[1]
+                for line in details.split("\r\n")
+            }
+            self._attr_latest_version = ".".join(
+                firmware[key] for key in ("major", "minor", "patch")
+            )
+        except Exception as ex:  # pylint: disable=broad-except
+            _LOGGER.exception(ex)
