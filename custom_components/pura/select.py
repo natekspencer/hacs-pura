@@ -78,11 +78,9 @@ class PuraSelectEntity(PuraEntity, SelectEntity):
     def current_option(self) -> str:
         """Return the selected entity option to represent the entity state."""
         device = self.get_device()
-        if device["bay1"]["activeAt"]:
-            return "slot_1"
-        if device["bay2"]["activeAt"]:
-            return "slot_2"
-        return "off"
+        if (bay := device["deviceActiveState"]["activeBay"]) == 0:
+            return "off"
+        return f"slot_{bay}"
 
     @property
     def options(self) -> list[str]:

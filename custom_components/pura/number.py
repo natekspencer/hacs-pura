@@ -62,24 +62,9 @@ class PuraNumberEntity(PuraEntity, NumberEntity):
     def _intensity_data(self) -> dict:
         """Get the intensity data."""
         device = self.get_device()
-        if (controller := device["controller"]) == "schedule":
-            controller = device["controllingSchedule"]
-            bay = (schedule := device["schedules"][controller])["bay"]
-            intensity = schedule["intensity"]
-        elif controller == "timer" and controller in device:
-            bay = (timer := device["timer"])["bay"]
-            intensity = timer["intensity"]
-        else:
-            defaults = device["deviceDefaults"]
-            if device["bay1"]["activeAt"]:
-                bay = 1
-                intensity = defaults["bay1Intensity"]
-            elif device["bay2"]["activeAt"]:
-                bay = 2
-                intensity = defaults["bay2Intensity"]
-            else:  # fragrance is off
-                bay = 0
-                intensity = 0
+        bay = device["deviceActiveState"]["activeBay"]
+        controller = device["controller"]
+        intensity = device["deviceActiveState"]["activeBayIntensity"]
         return {"bay": bay, "controller": str(controller), "intensity": intensity}
 
     async def async_set_native_value(self, value: int) -> None:
