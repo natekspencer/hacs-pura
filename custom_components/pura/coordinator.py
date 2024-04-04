@@ -87,7 +87,7 @@ class PuraCarFirmwareDataUpdateCoordinator(DataUpdateCoordinator):
             )
             return {
                 (part := line.split("=", 1))[0].lower(): part[1]
-                for line in details.split("\r\n")
+                for line in details.split("\n")
             }
         except Exception as err:  # pylint: disable=broad-except
             _LOGGER.error(
