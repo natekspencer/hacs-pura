@@ -1,5 +1,5 @@
 # Home Assistant
-homeassistant>=2023.12
+homeassistant>=2024.4
 home-assistant-frontend
 numpy
 
@@ -11,4 +11,4 @@ ical
 # Development
 colorlog==6.7.0
 pip>=21.0
-ruff==0.2.2
+ruff==0.3.5

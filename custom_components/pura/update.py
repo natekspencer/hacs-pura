@@ -86,7 +86,7 @@ class PuraUpdateEntity(PuraEntity, UpdateEntity):
             )
             firmware = {
                 (part := line.split("=", 1))[0].lower(): part[1]
-                for line in details.split("\r\n")
+                for line in details.split("\n")
             }
             self._attr_latest_version = ".".join(
                 firmware[key] for key in ("major", "minor", "patch")
