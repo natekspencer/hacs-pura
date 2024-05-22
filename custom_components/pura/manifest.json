@@ -8,6 +8,6 @@
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/natekspencer/hacs-pura/issues",
   "loggers": ["custom_components.pura", "pypura"],
-  "requirements": ["pypura==0.1.21", "deepdiff", "ical"],
+  "requirements": ["pypura==0.1.22", "deepdiff", "ical"],
   "version": "0.0.0"
 }
