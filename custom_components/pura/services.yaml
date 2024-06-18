@@ -33,10 +33,10 @@ start_timer:
       name: Duration
       description: Timer duration.
       required: true
-      example: "hours: 4\nminutes: 0\nseconds: 0"
+      example: "hours: 0\nminutes: 30\nseconds: 0"
       default:
-        hours: 4
-        minutes: 0
+        hours: 0
+        minutes: 30
         seconds: 0
       selector:
         duration:
