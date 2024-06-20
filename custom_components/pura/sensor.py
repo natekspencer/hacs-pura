@@ -19,7 +19,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.dt import UTC
+from homeassistant.util.dt import UTC, utc_from_timestamp
 
 from .const import DOMAIN
 from .coordinator import PuraDataUpdateCoordinator
@@ -160,6 +160,14 @@ SENSORS: dict[tuple[str, ...], tuple[PuraSensorEntityDescription, ...]] = {
             translation_key="controller",
             value_fn=lambda data: data["controller"],
             icon_fn=CONTROLLER_ICON.get,
+        ),
+        PuraSensorEntityDescription(
+            key="timer",
+            device_class=SensorDeviceClass.TIMESTAMP,
+            translation_key="timer",
+            value_fn=lambda data: None
+            if not (end := data.get("timer", {}).get("end"))
+            else utc_from_timestamp(end),
         ),
     ),
 }
