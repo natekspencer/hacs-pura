@@ -1,4 +1,5 @@
 """Support for Pura fragrance slots."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -8,7 +9,6 @@ from pypura import PuraApiException
 import voluptuous as vol
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
@@ -16,7 +16,8 @@ from homeassistant.helpers.entity_platform import (
     async_get_current_platform,
 )
 
-from .const import ATTR_DURATION, ATTR_INTENSITY, ATTR_SLOT, DOMAIN, ERROR_AWAY_MODE
+from . import PuraConfigEntry
+from .const import ATTR_DURATION, ATTR_INTENSITY, ATTR_SLOT, ERROR_AWAY_MODE
 from .coordinator import PuraDataUpdateCoordinator
 from .entity import PuraEntity, has_fragrance
 from .helpers import get_device_id
@@ -40,17 +41,14 @@ SERVICE_TIMER_SCHEMA = vol.All(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    hass: HomeAssistant, entry: PuraConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Pura selects using config entry."""
-    coordinator: PuraDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: PuraDataUpdateCoordinator = entry.runtime_data
 
     entities = [
         PuraSelectEntity(
             coordinator=coordinator,
-            config_entry=config_entry,
             description=SELECT_DESCRIPTION,
             device_type=device_type,
             device_id=get_device_id(device),

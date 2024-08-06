@@ -1,4 +1,5 @@
 """Support for Pura switches."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -11,12 +12,11 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import PuraConfigEntry
 from .coordinator import PuraDataUpdateCoordinator
 from .entity import PuraEntity
 from .helpers import get_device_id
@@ -67,17 +67,14 @@ SWITCHES = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    hass: HomeAssistant, entry: PuraConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Pura switchs using config entry."""
-    coordinator: PuraDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: PuraDataUpdateCoordinator = entry.runtime_data
 
     entities = [
         PuraSwitchEntity(
             coordinator=coordinator,
-            config_entry=config_entry,
             description=description,
             device_type=device_type,
             device_id=get_device_id(device),

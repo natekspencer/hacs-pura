@@ -1,4 +1,5 @@
 """Support for Pura fragrance intensity."""
+
 from __future__ import annotations
 
 import functools
@@ -6,12 +7,12 @@ import functools
 from pypura import PuraApiException
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, ERROR_AWAY_MODE
+from . import PuraConfigEntry
+from .const import ERROR_AWAY_MODE
 from .coordinator import PuraDataUpdateCoordinator
 from .entity import PuraEntity
 from .helpers import get_device_id
@@ -20,17 +21,14 @@ NUMBER_DESCRIPTION = NumberEntityDescription(key="intensity", name="Intensity")
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    hass: HomeAssistant, entry: PuraConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Pura numbers using config entry."""
-    coordinator: PuraDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: PuraDataUpdateCoordinator = entry.runtime_data
 
     entities = [
         PuraNumberEntity(
             coordinator=coordinator,
-            config_entry=config_entry,
             description=NUMBER_DESCRIPTION,
             device_type=device_type,
             device_id=get_device_id(device),

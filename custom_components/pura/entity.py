@@ -1,9 +1,9 @@
 """Pura entities."""
+
 from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import (
     CONNECTION_BLUETOOTH,
     CONNECTION_NETWORK_MAC,
@@ -12,6 +12,7 @@ from homeassistant.helpers.device_registry import (
 from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import PuraConfigEntry
 from .const import DOMAIN
 from .coordinator import PuraDataUpdateCoordinator
 from .helpers import first_key_value
@@ -42,14 +43,12 @@ class PuraEntity(CoordinatorEntity[PuraDataUpdateCoordinator]):
     def __init__(
         self,
         coordinator: PuraDataUpdateCoordinator,
-        config_entry: ConfigEntry,
         description: EntityDescription,
         device_type: str,
         device_id: str,
     ) -> None:
         """Construct a PuraEntity."""
         super().__init__(coordinator)
-        self._config_entry = config_entry
         self.entity_description = description
         self._device_type = device_type
         self._device_id = device_id

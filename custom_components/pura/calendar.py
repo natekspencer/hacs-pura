@@ -1,4 +1,5 @@
 """Support for Pura diffuser schedule."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -10,14 +11,13 @@ from ical.types import Recur
 from pypura import fragrance_name
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from . import PuraConfigEntry
 from .coordinator import PuraDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,15 +28,12 @@ ONE_DAY = timedelta(days=1)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    hass: HomeAssistant, entry: PuraConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Pura schedule calendar using config entry."""
-    coordinator: PuraDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     entities = [
         PuraCalendarEntity(
-            coordinator=coordinator, config_entry=config_entry, description=SCHEDULE
+            coordinator=entry.runtime_data, description=SCHEDULE, entry=entry
         )
     ]
     async_add_entities(entities)
@@ -53,14 +50,13 @@ class PuraCalendarEntity(CoordinatorEntity[PuraDataUpdateCoordinator], CalendarE
     def __init__(
         self,
         coordinator: PuraDataUpdateCoordinator,
-        config_entry: ConfigEntry,
         description: EntityDescription,
+        entry: PuraConfigEntry,
     ) -> None:
         """Construct a PuraEntity."""
         super().__init__(coordinator)
-        self._config_entry = config_entry
         self.entity_description = description
-        self._attr_unique_id = f"{config_entry.entry_id}-{description.key}"
+        self._attr_unique_id = f"{entry.entry_id}-{description.key}"
 
     @property
     def event(self) -> CalendarEvent | None:
