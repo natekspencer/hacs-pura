@@ -33,7 +33,7 @@ async def async_setup_entry(
     """Set up Pura schedule calendar using config entry."""
     entities = [
         PuraCalendarEntity(
-            coordinator=entry.runtime_data, config_entry=entry, description=SCHEDULE
+            coordinator=entry.runtime_data, description=SCHEDULE, entry=entry
         )
     ]
     async_add_entities(entities)
@@ -50,13 +50,13 @@ class PuraCalendarEntity(CoordinatorEntity[PuraDataUpdateCoordinator], CalendarE
     def __init__(
         self,
         coordinator: PuraDataUpdateCoordinator,
-        config_entry: PuraConfigEntry,
         description: EntityDescription,
+        entry: PuraConfigEntry,
     ) -> None:
         """Construct a PuraEntity."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{config_entry.entry_id}-{description.key}"
+        self._attr_unique_id = f"{entry.entry_id}-{description.key}"
 
     @property
     def event(self) -> CalendarEvent | None:
