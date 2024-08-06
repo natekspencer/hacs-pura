@@ -15,13 +15,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import UTC, utc_from_timestamp
 
-from .const import DOMAIN
+from . import PuraConfigEntry
 from .coordinator import PuraDataUpdateCoordinator
 from .entity import PuraEntity, has_fragrance
 from .helpers import get_device_id
@@ -174,17 +173,14 @@ SENSORS: dict[tuple[str, ...], tuple[PuraSensorEntityDescription, ...]] = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    hass: HomeAssistant, entry: PuraConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Pura sensors using config entry."""
-    coordinator: PuraDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: PuraDataUpdateCoordinator = entry.runtime_data
 
     entities = [
         PuraSensorEntity(
             coordinator=coordinator,
-            config_entry=config_entry,
             description=description,
             device_type=device_type,
             device_id=get_device_id(device),

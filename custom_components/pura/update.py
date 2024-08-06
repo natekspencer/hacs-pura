@@ -1,4 +1,5 @@
 """Support for Pura update."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -9,11 +10,10 @@ from homeassistant.components.update import (
     UpdateEntity,
     UpdateEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import PuraConfigEntry
 from .coordinator import PuraDataUpdateCoordinator
 from .entity import PuraEntity
 from .helpers import get_device_id
@@ -37,17 +37,14 @@ UPDATE = PuraUpdateEntityDescription(key="firmware", lookup_key="fw_version")
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    hass: HomeAssistant, entry: PuraConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Pura updates using config entry."""
-    coordinator: PuraDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: PuraDataUpdateCoordinator = entry.runtime_data
 
     entities = [
         PuraUpdateEntity(
             coordinator=coordinator,
-            config_entry=config_entry,
             description=UPDATE,
             device_type=device_type,
             device_id=get_device_id(device),
