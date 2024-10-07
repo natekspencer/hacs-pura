@@ -1,0 +1,20 @@
+{
+  "entity": {
+    "select": {
+      "fragrance": {
+        "default": "mdi:scent",
+        "state": {
+          "off": "mdi:scent-off"
+        }
+      },
+      "intensity": {
+        "default": "mdi:signal-cellular-outline",
+        "state": {
+          "subtle": "mdi:signal-cellular-1",
+          "medium": "mdi:signal-cellular-2",
+          "strong": "mdi:signal-cellular-3"
+        }
+      }
+    }
+  }
+}

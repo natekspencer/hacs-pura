@@ -12,10 +12,8 @@ from homeassistant.helpers.device_registry import (
 from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import PuraConfigEntry
 from .const import DOMAIN
 from .coordinator import PuraDataUpdateCoordinator
-from .helpers import first_key_value
 
 UPDATE_INTERVAL = 30
 
@@ -32,7 +30,7 @@ def determine_pura_model(data: dict[str, Any]) -> str | None:
 
 def has_fragrance(data: dict, bay: int) -> bool:
     """Check if the specified bay has a fragrance."""
-    return bool(first_key_value(data, (f"bay_{bay}", f"bay{bay}"), {}).get("code"))
+    return bool(data[f"bay{bay}"])
 
 
 class PuraEntity(CoordinatorEntity[PuraDataUpdateCoordinator]):
@@ -55,7 +53,7 @@ class PuraEntity(CoordinatorEntity[PuraDataUpdateCoordinator]):
         self._attr_unique_id = f"{device_id}-{description.key}"
 
         device = self.get_device()
-        name = device["roomName"] if device_type == "wall" else device["device_name"]
+        name = device["displayName"]["name"]
         self._attr_device_info = DeviceInfo(
             connections={
                 (
@@ -70,10 +68,28 @@ class PuraEntity(CoordinatorEntity[PuraDataUpdateCoordinator]):
             model=determine_pura_model(device),
             name=f"{name} Diffuser",
             suggested_area=name if device_type == "wall" else None,
-            sw_version=first_key_value(device, ("fw_version", "fwVersion")),
-            hw_version=first_key_value(device, ("hw_version", "hwVersion")),
+            sw_version=device["fwVersion"],
+            hw_version=device["hwVersion"],
         )
 
     def get_device(self) -> dict | None:
         """Get the device from the coordinator."""
         return self.coordinator.get_device(self._device_type, self._device_id)
+
+    @property
+    def _intensity_data(self) -> dict:
+        """Get the intensity data."""
+        device = self.get_device()
+        if (controller := device["controller"]) == "timer":
+            return device[controller] | {"controller": controller}
+        if controller.isnumeric():
+            for schedule in device["schedules"]:
+                if str(schedule["number"]) == controller:
+                    return schedule | {"controller": "schedule"}
+        bay = 0
+        if (data := device["bay1"]) and data["activeAt"]:
+            bay = 1
+        elif (data := device["bay2"]) and data["activeAt"]:
+            bay = 2
+        intensity = device["deviceDefaults"][f"bay{bay}Intensity"] if bay else None
+        return {"bay": bay, "controller": str(controller), "intensity": intensity}

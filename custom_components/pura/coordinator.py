@@ -1,4 +1,5 @@
 """Pura coordinator."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -47,7 +48,9 @@ class PuraDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Update data via library, refresh token if necessary."""
         try:
-            if devices := await self.hass.async_add_executor_job(self.api.get_devices):
+            if devices := await self.hass.async_add_executor_job(
+                self.api.get_devices_v2
+            ):
                 diff = DeepDiff(
                     self.devices,
                     devices,

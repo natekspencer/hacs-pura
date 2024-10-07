@@ -41,7 +41,7 @@ SENSORS: dict[tuple[str, ...], tuple[PuraBinarySensorEntityDescription, ...]] = 
             key="low_fragrance",
             name="Low fragrance",
             device_class=BinarySensorDeviceClass.PROBLEM,
-            on_fn=lambda data: data["bay_1"]["low_fragrance"],
+            on_fn=lambda data: data["bay1"]["lowFragrance"],
         ),
     ),
     ("wall"): (
