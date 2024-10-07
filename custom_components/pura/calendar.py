@@ -8,7 +8,6 @@ import logging
 from ical.calendar import Calendar
 from ical.event import Event
 from ical.types import Recur
-from pypura import fragrance_name
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.core import HomeAssistant, callback
@@ -89,11 +88,11 @@ class PuraCalendarEntity(CoordinatorEntity[PuraDataUpdateCoordinator], CalendarE
         self._calendar = Calendar()
         self._calendar.events.extend(
             Event(
-                summary=f"{schedule['name']} - {device['roomName']}",
+                summary=f"{schedule['name']} - {device['displayName']['name']}",
                 start=_parse_datetime(now, schedule["start"], schedule["disableUntil"]),
                 end=_parse_datetime(now, schedule["end"], schedule["disableUntil"]),
                 description=f'Fragrance slot {schedule["bay"]} ('
-                + fragrance_name(device[f'bay{schedule["bay"]}']["code"])
+                + device[f'bay{schedule["bay"]}']["fragrance"]["name"]
                 + f')\nIntensity {schedule["intensity"]}',
                 uid=schedule["id"],
                 rrule=Recur.from_rrule(

@@ -34,6 +34,15 @@
           "slot_1": "Slot 1",
           "slot_2": "Slot 2"
         }
+      },
+      "intensity": {
+        "name": "Intensity",
+        "state": {
+          "off": "Off",
+          "subtle": "Subtle",
+          "medium": "Medium",
+          "strong": "Strong"
+        }
       }
     },
     "sensor": {

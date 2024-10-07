@@ -1,4 +1,5 @@
 """Helpers."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable
@@ -17,4 +18,4 @@ def first_key_value(
 
 def get_device_id(data: dict[str, Any]) -> str | None:
     """Get the device id from a dictionary."""
-    return first_key_value(data, ("device_id", "deviceId"))
+    return data["deviceId"]

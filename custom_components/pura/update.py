@@ -33,7 +33,7 @@ class PuraUpdateEntityDescription(UpdateEntityDescription, RequiredKeysMixin):
     """Pura update entity description."""
 
 
-UPDATE = PuraUpdateEntityDescription(key="firmware", lookup_key="fw_version")
+UPDATE = PuraUpdateEntityDescription(key="firmware", lookup_key="fwVersion")
 
 
 async def async_setup_entry(

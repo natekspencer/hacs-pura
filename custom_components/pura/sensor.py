@@ -7,8 +7,6 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
-from pypura import fragrance_name
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -56,7 +54,7 @@ SENSORS: dict[tuple[str, ...], tuple[PuraSensorEntityDescription, ...]] = {
             entity_category=EntityCategory.DIAGNOSTIC,
             icon="mdi:scent",
             available_fn=lambda data: has_fragrance(data, 1),
-            value_fn=lambda data: data["bay_1"].get("name"),
+            value_fn=lambda data: data["bay1"]["fragrance"]["name"],
         ),
         PuraSensorEntityDescription(
             key="intensity",
@@ -64,7 +62,7 @@ SENSORS: dict[tuple[str, ...], tuple[PuraSensorEntityDescription, ...]] = {
             entity_category=EntityCategory.DIAGNOSTIC,
             icon="mdi:fan",
             available_fn=lambda data: has_fragrance(data, 1),
-            value_fn=lambda data: data["bay_1"]["fan_intensity"],
+            value_fn=lambda data: data["bay1"]["fanIntensity"],
         ),
         PuraSensorEntityDescription(
             key="last_active",
@@ -72,9 +70,7 @@ SENSORS: dict[tuple[str, ...], tuple[PuraSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.TIMESTAMP,
             entity_category=EntityCategory.DIAGNOSTIC,
             available_fn=lambda data: has_fragrance(data, 1),
-            value_fn=lambda data: datetime.fromtimestamp(
-                data["bay_1"]["active_at"] / 1000, UTC
-            ),
+            value_fn=lambda data: datetime.fromtimestamp(data["bay1"]["activeAt"], UTC),
         ),
         PuraSensorEntityDescription(
             key="runtime",
@@ -85,7 +81,7 @@ SENSORS: dict[tuple[str, ...], tuple[PuraSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.TOTAL_INCREASING,
             suggested_unit_of_measurement=UnitOfTime.HOURS,
             available_fn=lambda data: has_fragrance(data, 1),
-            value_fn=lambda data: data["bay_1"]["wearing_time"],
+            value_fn=lambda data: data["bay1"]["wearingTime"],
         ),
     ),
     ("wall"): (
@@ -93,9 +89,13 @@ SENSORS: dict[tuple[str, ...], tuple[PuraSensorEntityDescription, ...]] = {
             key="active_fragrance",
             translation_key="active_fragrance",
             icon="mdi:scent",
-            value_fn=lambda data: fragrance_name(data[f"bay{bay}"]["code"])
-            if (bay := data["deviceActiveState"]["activeBay"])
-            else "none",
+            value_fn=lambda data: bay["fragrance"]["name"]
+            if (bay := data["bay1"]) and bay["activeAt"]
+            else (
+                bay["fragrance"]["name"]
+                if (bay := data["bay2"]) and bay["activeAt"]
+                else "none"
+            ),
         ),
         PuraSensorEntityDescription(
             key="bay_1",
@@ -103,7 +103,7 @@ SENSORS: dict[tuple[str, ...], tuple[PuraSensorEntityDescription, ...]] = {
             entity_category=EntityCategory.DIAGNOSTIC,
             icon="mdi:scent",
             available_fn=lambda data: has_fragrance(data, 1),
-            value_fn=lambda data: fragrance_name(data["bay1"]["code"]),
+            value_fn=lambda data: data["bay1"]["fragrance"]["name"],
         ),
         PuraSensorEntityDescription(
             key="bay_1_runtime",
@@ -131,7 +131,7 @@ SENSORS: dict[tuple[str, ...], tuple[PuraSensorEntityDescription, ...]] = {
             entity_category=EntityCategory.DIAGNOSTIC,
             icon="mdi:scent",
             available_fn=lambda data: has_fragrance(data, 2),
-            value_fn=lambda data: fragrance_name(data["bay2"]["code"]),
+            value_fn=lambda data: data["bay2"]["fragrance"]["name"],
         ),
         PuraSensorEntityDescription(
             key="bay_2_runtime",
@@ -165,7 +165,7 @@ SENSORS: dict[tuple[str, ...], tuple[PuraSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.TIMESTAMP,
             translation_key="timer",
             value_fn=lambda data: None
-            if not (end := data.get("timer", {}).get("end"))
+            if not (end := (data.get("timer") or {}).get("end"))
             else utc_from_timestamp(end),
         ),
     ),

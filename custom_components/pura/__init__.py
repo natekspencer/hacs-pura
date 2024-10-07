@@ -5,8 +5,13 @@ from __future__ import annotations
 from pypura import Pura, PuraAuthenticationError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_USERNAME, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.const import (
+    CONF_ACCESS_TOKEN,
+    CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP,
+    Platform,
+)
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceEntry
 
@@ -20,7 +25,6 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.CALENDAR,
     Platform.LIGHT,
-    Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
@@ -30,7 +34,7 @@ PLATFORMS = [
 
 async def async_setup_entry(hass: HomeAssistant, entry: PuraConfigEntry) -> bool:
     """Set up Pura from a config entry."""
-    entry.add_update_listener(update_listener)
+    _unlisten = entry.add_update_listener(update_listener)
 
     client = Pura(
         username=entry.data.get(CONF_USERNAME),
@@ -52,6 +56,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: PuraConfigEntry) -> bool
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    @callback
+    def _async_save_tokens(ev: Event) -> None:
+        """Save tokens to the config entry data."""
+        _unlisten()
+        hass.config_entries.async_update_entry(
+            entry, data=entry.data | client.get_tokens()
+        )
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_save_tokens)
 
     return True
 
