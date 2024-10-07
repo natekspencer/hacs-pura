@@ -15,6 +15,16 @@
           "strong": "mdi:signal-cellular-3"
         }
       }
+    },
+    "sensor": {
+      "controller": {
+        "default": "mdi:toggle-switch-outline",
+        "state": {
+          "away": "mdi:map-marker-radius-outline",
+          "schedule": "mdi:calendar-blank-outline",
+          "timer": "mdi:timer-outline"
+        }
+      }
     }
   }
 }

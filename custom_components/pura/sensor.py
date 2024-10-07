@@ -36,7 +36,6 @@ class PuraSensorEntityDescription(SensorEntityDescription, RequiredKeysMixin):
     """Pura sensor entity description."""
 
     available_fn: Callable[[dict], bool] | None = None
-    icon_fn: Callable[[str], str | None] | None = None
 
 
 CONTROLLER_ICON = {
@@ -157,8 +156,9 @@ SENSORS: dict[tuple[str, ...], tuple[PuraSensorEntityDescription, ...]] = {
             key="controller",
             entity_category=EntityCategory.DIAGNOSTIC,
             translation_key="controller",
-            value_fn=lambda data: data["controller"],
-            icon_fn=CONTROLLER_ICON.get,
+            value_fn=lambda data: "schedule"
+            if (controller := data["controller"]).isnumeric()
+            else controller,
         ),
         PuraSensorEntityDescription(
             key="timer",
@@ -209,13 +209,6 @@ class PuraSensorEntity(PuraEntity, SensorEntity):
         if available_fn := self.entity_description.available_fn:
             return available_fn(self.get_device())
         return super().available
-
-    @property
-    def icon(self) -> str | None:
-        """Return the icon to use in the frontend, if any."""
-        if icon_fn := self.entity_description.icon_fn:
-            return icon_fn(self.native_value)
-        return super().icon
 
     @property
     def native_value(self) -> str | int | datetime | None:
