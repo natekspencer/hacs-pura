@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import EntityCategory, UnitOfTime
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import UTC, utc_from_timestamp
@@ -38,26 +38,36 @@ class PuraSensorEntityDescription(SensorEntityDescription, RequiredKeysMixin):
     available_fn: Callable[[dict], bool] | None = None
 
 
-CONTROLLER_ICON = {
-    "away": "mdi:map-marker-radius-outline",
-    "default": "mdi:toggle-switch-outline",
-    "schedule": "mdi:calendar-blank-outline",
-    "timer": "mdi:timer-outline",
-}
+def fragrance_remaining(data: dict, bay: str) -> float:
+    bay_data = data[f"bay{bay}"]
+    expected_life = bay_data["fragrance"]["expectedLifeHours"] * 3600
+    return (max(expected_life - bay_data["wearingTime"], 0) / expected_life) * 100
+
 
 SENSORS: dict[tuple[str, ...], tuple[PuraSensorEntityDescription, ...]] = {
     ("car"): (
         PuraSensorEntityDescription(
             key="fragrance",
-            name="Fragrance",
+            translation_key="fragrance",
             entity_category=EntityCategory.DIAGNOSTIC,
             icon="mdi:scent",
             available_fn=lambda data: has_fragrance(data, 1),
             value_fn=lambda data: data["bay1"]["fragrance"]["name"],
         ),
         PuraSensorEntityDescription(
+            key="fragrance_remaining",
+            translation_key="fragrance_remaining",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            icon="mdi:scent",
+            native_unit_of_measurement=PERCENTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+            suggested_display_precision=0,
+            available_fn=lambda data: has_fragrance(data, 1),
+            value_fn=lambda data: fragrance_remaining(data, 1),
+        ),
+        PuraSensorEntityDescription(
             key="intensity",
-            name="Fan intensity",
+            translation_key="intensity",
             entity_category=EntityCategory.DIAGNOSTIC,
             icon="mdi:fan",
             available_fn=lambda data: has_fragrance(data, 1),
@@ -65,7 +75,7 @@ SENSORS: dict[tuple[str, ...], tuple[PuraSensorEntityDescription, ...]] = {
         ),
         PuraSensorEntityDescription(
             key="last_active",
-            name="Last active",
+            translation_key="last_active",
             device_class=SensorDeviceClass.TIMESTAMP,
             entity_category=EntityCategory.DIAGNOSTIC,
             available_fn=lambda data: has_fragrance(data, 1),
@@ -73,7 +83,7 @@ SENSORS: dict[tuple[str, ...], tuple[PuraSensorEntityDescription, ...]] = {
         ),
         PuraSensorEntityDescription(
             key="runtime",
-            name="Runtime",
+            translation_key="runtime",
             device_class=SensorDeviceClass.DURATION,
             entity_category=EntityCategory.DIAGNOSTIC,
             native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -98,15 +108,29 @@ SENSORS: dict[tuple[str, ...], tuple[PuraSensorEntityDescription, ...]] = {
         ),
         PuraSensorEntityDescription(
             key="bay_1",
-            name="Slot 1 fragrance",
+            translation_key="bay_fragrance",
+            translation_placeholders={"bay": 1},
             entity_category=EntityCategory.DIAGNOSTIC,
             icon="mdi:scent",
             available_fn=lambda data: has_fragrance(data, 1),
             value_fn=lambda data: data["bay1"]["fragrance"]["name"],
         ),
         PuraSensorEntityDescription(
+            key="bay_1_fragrance_remaining",
+            translation_key="bay_fragrance_remaining",
+            translation_placeholders={"bay": 1},
+            entity_category=EntityCategory.DIAGNOSTIC,
+            icon="mdi:scent",
+            native_unit_of_measurement=PERCENTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+            suggested_display_precision=0,
+            available_fn=lambda data: has_fragrance(data, 1),
+            value_fn=lambda data: fragrance_remaining(data, 1),
+        ),
+        PuraSensorEntityDescription(
             key="bay_1_runtime",
-            name="Slot 1 runtime",
+            translation_key="bay_runtime",
+            translation_placeholders={"bay": 1},
             device_class=SensorDeviceClass.DURATION,
             entity_category=EntityCategory.DIAGNOSTIC,
             native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -117,7 +141,8 @@ SENSORS: dict[tuple[str, ...], tuple[PuraSensorEntityDescription, ...]] = {
         ),
         PuraSensorEntityDescription(
             key="bay_1_installed",
-            name="Slot 1 installed",
+            translation_key="bay_installed",
+            translation_placeholders={"bay": 1},
             device_class=SensorDeviceClass.TIMESTAMP,
             entity_category=EntityCategory.DIAGNOSTIC,
             entity_registry_enabled_default=False,
@@ -126,15 +151,29 @@ SENSORS: dict[tuple[str, ...], tuple[PuraSensorEntityDescription, ...]] = {
         ),
         PuraSensorEntityDescription(
             key="bay_2",
-            name="Slot 2 fragrance",
+            translation_key="bay_fragrance",
+            translation_placeholders={"bay": 2},
             entity_category=EntityCategory.DIAGNOSTIC,
             icon="mdi:scent",
             available_fn=lambda data: has_fragrance(data, 2),
             value_fn=lambda data: data["bay2"]["fragrance"]["name"],
         ),
         PuraSensorEntityDescription(
+            key="bay_2_fragrance_remaining",
+            translation_key="bay_fragrance_remaining",
+            translation_placeholders={"bay": 2},
+            entity_category=EntityCategory.DIAGNOSTIC,
+            icon="mdi:scent",
+            native_unit_of_measurement=PERCENTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+            suggested_display_precision=0,
+            available_fn=lambda data: has_fragrance(data, 2),
+            value_fn=lambda data: fragrance_remaining(data, 2),
+        ),
+        PuraSensorEntityDescription(
             key="bay_2_runtime",
-            name="Slot 2 runtime",
+            translation_key="bay_runtime",
+            translation_placeholders={"bay": 2},
             device_class=SensorDeviceClass.DURATION,
             entity_category=EntityCategory.DIAGNOSTIC,
             native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -145,7 +184,8 @@ SENSORS: dict[tuple[str, ...], tuple[PuraSensorEntityDescription, ...]] = {
         ),
         PuraSensorEntityDescription(
             key="bay_2_installed",
-            name="Slot 2 installed",
+            translation_key="bay_installed",
+            translation_placeholders={"bay": 2},
             device_class=SensorDeviceClass.TIMESTAMP,
             entity_category=EntityCategory.DIAGNOSTIC,
             entity_registry_enabled_default=False,
@@ -154,16 +194,16 @@ SENSORS: dict[tuple[str, ...], tuple[PuraSensorEntityDescription, ...]] = {
         ),
         PuraSensorEntityDescription(
             key="controller",
-            entity_category=EntityCategory.DIAGNOSTIC,
             translation_key="controller",
+            entity_category=EntityCategory.DIAGNOSTIC,
             value_fn=lambda data: "schedule"
             if (controller := data["controller"]).isnumeric()
             else controller,
         ),
         PuraSensorEntityDescription(
             key="timer",
-            device_class=SensorDeviceClass.TIMESTAMP,
             translation_key="timer",
+            device_class=SensorDeviceClass.TIMESTAMP,
             value_fn=lambda data: None
             if not (end := (data.get("timer") or {}).get("end"))
             else utc_from_timestamp(end),

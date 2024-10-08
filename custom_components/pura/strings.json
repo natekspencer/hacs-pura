@@ -48,10 +48,12 @@
     "sensor": {
       "active_fragrance": {
         "name": "Active fragrance",
-        "state": {
-          "none": "None"
-        }
+        "state": { "none": "None" }
       },
+      "bay_fragrance": { "name": "Slot {bay} fragrance" },
+      "bay_fragrance_remaining": { "name": "Slot {bay} fragrance remaining" },
+      "bay_installed": { "name": "Slot {bay} installed" },
+      "bay_runtime": { "name": "Slot {bay} runtime" },
       "controller": {
         "name": "Controller",
         "state": {
@@ -61,6 +63,11 @@
           "timer": "Timer"
         }
       },
+      "fragrance": { "name": "Fragrance" },
+      "fragrance_remaining": { "name": "Fragrance remaining" },
+      "intensity": { "name": "Fan intensity" },
+      "last_active": { "name": "Last active" },
+      "runtime": { "name": "Runtime" },
       "timer": { "name": "Timer" }
     }
   }
