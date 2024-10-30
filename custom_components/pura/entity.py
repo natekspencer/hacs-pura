@@ -58,7 +58,7 @@ class PuraEntity(CoordinatorEntity[PuraDataUpdateCoordinator]):
             connections={
                 (
                     CONNECTION_NETWORK_MAC
-                    if device_type == "wall"
+                    if device_type in ("wall", "plus")
                     else CONNECTION_BLUETOOTH,
                     format_mac(device_id),
                 )
@@ -67,7 +67,7 @@ class PuraEntity(CoordinatorEntity[PuraDataUpdateCoordinator]):
             manufacturer="Pura",
             model=determine_pura_model(device),
             name=f"{name} Diffuser",
-            suggested_area=name if device_type == "wall" else None,
+            suggested_area=name if device_type in ("wall", "plus") else None,
             sw_version=device["fwVersion"],
             hw_version=device["hwVersion"],
         )

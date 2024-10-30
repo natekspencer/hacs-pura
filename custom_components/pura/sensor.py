@@ -93,7 +93,7 @@ SENSORS: dict[tuple[str, ...], tuple[PuraSensorEntityDescription, ...]] = {
             value_fn=lambda data: data["bay1"]["wearingTime"],
         ),
     ),
-    ("wall"): (
+    ("wall", "plus"): (
         PuraSensorEntityDescription(
             key="active_fragrance",
             translation_key="active_fragrance",
