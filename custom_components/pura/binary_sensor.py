@@ -44,7 +44,7 @@ SENSORS: dict[tuple[str, ...], tuple[PuraBinarySensorEntityDescription, ...]] = 
             on_fn=lambda data: data["bay1"]["lowFragrance"],
         ),
     ),
-    ("wall"): (
+    ("wall", "plus"): (
         PuraBinarySensorEntityDescription(
             key="connected",
             name="Connected",

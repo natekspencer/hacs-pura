@@ -99,7 +99,9 @@ class PuraCalendarEntity(CoordinatorEntity[PuraDataUpdateCoordinator], CalendarE
                     f'FREQ=WEEKLY;BYDAY={",".join(day[:2].upper() for day in schedule["days"] if schedule["days"][day])};INTERVAL=1'
                 ),
             )
-            for device in self.coordinator.devices.get("wall", [])
+            for device_type, devices in self.coordinator.devices.items()
+            if device_type in ("wall", "plus")
+            for device in devices
             for schedule in device.get("schedules", [])
             if schedule["disableUntil"] != -1
         )

@@ -35,35 +35,39 @@ class PuraSwitchEntityDescription(SwitchEntityDescription, RequiredKeysMixin):
     """Pura switch entity description."""
 
 
-SWITCHES = (
-    PuraSwitchEntityDescription(
-        key="ambient_mode",
-        name="Ambient mode",
-        lookup_key="ambientMode",
-        toggle_fn=lambda self, value: (
-            self.coordinator.api.set_ambient_mode,
-            {"ambient_mode": value},
-        ),
-    ),
-    PuraSwitchEntityDescription(
-        key="away_mode",
-        name="Away mode",
-        lookup_key="awayMode",
-        toggle_fn=lambda self, value: (
-            self.coordinator.api.set_away_mode,
-            {"away_mode": value}
-            | (
-                {
-                    k: v
-                    for k, v in self.get_device()["deviceLocation"].items()
-                    if k in ("radius", "longitude", "latitude")
-                }
-                if value
-                else {}
+SWITCHES: dict[tuple[str, ...], tuple[PuraSwitchEntityDescription, ...]] = {
+    ("wall"): (
+        PuraSwitchEntityDescription(
+            key="ambient_mode",
+            name="Ambient mode",
+            lookup_key="ambientMode",
+            toggle_fn=lambda self, value: (
+                self.coordinator.api.set_ambient_mode,
+                {"ambient_mode": value},
             ),
         ),
     ),
-)
+    ("wall", "plus"): (
+        PuraSwitchEntityDescription(
+            key="away_mode",
+            name="Away mode",
+            lookup_key="awayMode",
+            toggle_fn=lambda self, value: (
+                self.coordinator.api.set_away_mode,
+                {"away_mode": value}
+                | (
+                    {
+                        k: v
+                        for k, v in self.get_device()["deviceLocation"].items()
+                        if k in ("radius", "longitude", "latitude")
+                    }
+                    if value
+                    else {}
+                ),
+            ),
+        ),
+    ),
+}
 
 
 async def async_setup_entry(
@@ -79,10 +83,11 @@ async def async_setup_entry(
             device_type=device_type,
             device_id=get_device_id(device),
         )
+        for device_types, descriptions in SWITCHES.items()
         for device_type, devices in coordinator.devices.items()
-        if device_type == "wall"
+        if device_type in device_types
         for device in devices
-        for description in SWITCHES
+        for description in descriptions
     ]
 
     if not entities:
