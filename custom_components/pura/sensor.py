@@ -39,9 +39,20 @@ class PuraSensorEntityDescription(SensorEntityDescription, RequiredKeysMixin):
 
 
 def fragrance_remaining(data: dict, bay: str) -> float:
+    """Return the fragrance remaining."""
     bay_data = data[f"bay{bay}"]
     expected_life = bay_data["fragrance"]["expectedLifeHours"] * 3600
-    return (max(expected_life - bay_data["wearingTime"], 0) / expected_life) * 100
+    return (max(expected_life - fragrance_runtime(data, bay), 0) / expected_life) * 100
+
+
+def fragrance_runtime(data: dict, bay: str) -> int:
+    """Return the fragrance runtime."""
+    bay_data = data[f"bay{bay}"]
+    wearing_time = bay_data["wearingTime"]
+    if (active_at := bay_data["activeAt"]) and not data["lastConnectedAt"]:
+        active_time = datetime.now(UTC) - datetime.fromtimestamp(active_at, UTC)
+        wearing_time += int(active_time.total_seconds())
+    return wearing_time
 
 
 SENSORS: dict[tuple[str, ...], tuple[PuraSensorEntityDescription, ...]] = {
@@ -137,7 +148,7 @@ SENSORS: dict[tuple[str, ...], tuple[PuraSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.TOTAL_INCREASING,
             suggested_unit_of_measurement=UnitOfTime.HOURS,
             available_fn=lambda data: has_fragrance(data, 1),
-            value_fn=lambda data: data["bay1"]["wearingTime"],
+            value_fn=lambda data: fragrance_runtime(data, 1),
         ),
         PuraSensorEntityDescription(
             key="bay_1_installed",
@@ -180,7 +191,7 @@ SENSORS: dict[tuple[str, ...], tuple[PuraSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.TOTAL_INCREASING,
             suggested_unit_of_measurement=UnitOfTime.HOURS,
             available_fn=lambda data: has_fragrance(data, 2),
-            value_fn=lambda data: data["bay2"]["wearingTime"],
+            value_fn=lambda data: fragrance_runtime(data, 2),
         ),
         PuraSensorEntityDescription(
             key="bay_2_installed",
