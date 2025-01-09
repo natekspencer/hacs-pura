@@ -7,12 +7,12 @@ from dataclasses import dataclass
 from datetime import timedelta
 import functools
 
-from pypura import PuraApiException
 import voluptuous as vol
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
@@ -20,7 +20,7 @@ from homeassistant.helpers.entity_platform import (
 )
 
 from . import PuraConfigEntry
-from .const import ATTR_DURATION, ATTR_INTENSITY, ATTR_SLOT, ERROR_AWAY_MODE
+from .const import ATTR_DURATION, ATTR_INTENSITY, ATTR_SLOT, DOMAIN
 from .coordinator import PuraDataUpdateCoordinator
 from .entity import PuraEntity, has_fragrance
 from .helpers import get_device_id
@@ -103,7 +103,11 @@ SELECT_DESCRIPTIONS = (
             select.coordinator.api.set_intensity,
             select._device_id,
             bay=select._intensity_data["bay"],
-            controller=select._intensity_data["controller"],
+            controller=(
+                str(select._intensity_data["number"])
+                if (controller := select._intensity_data["controller"]) == "schedule"
+                else controller
+            ),
             intensity=INTENSITY_MAP[option],
         ),
     ),
@@ -132,12 +136,14 @@ class PuraSelectEntity(PuraEntity, SelectEntity):
         if option == "off":
             job = functools.partial(self.coordinator.api.stop_all, self._device_id)
         elif self.get_device()["controller"] == "away":
-            raise PuraApiException(ERROR_AWAY_MODE)
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="away_mode_active"
+            )
         else:
             job = self.entity_description.select_fn(self, option)
             if not job.keywords["bay"]:
-                raise PuraApiException(
-                    "No fragrance is currently active. Please select a fragrance before adjusting intensity."
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN, translation_key="no_active_fragrance"
                 )
 
         if await self.hass.async_add_executor_job(job):
@@ -149,7 +155,9 @@ class PuraSelectEntity(PuraEntity, SelectEntity):
         """Start a fragrance timer."""
         device = self.get_device()
         if not (fragrance_bays := [i for i in (1, 2) if has_fragrance(device, i)]):
-            raise PuraApiException("Diffuser does not have any fragrances")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="no_fragrances_installed"
+            )
 
         if not slot:
             if len(fragrance_bays) == 1:
@@ -158,7 +166,11 @@ class PuraSelectEntity(PuraEntity, SelectEntity):
                 runtime = "wearingTime"
                 slot = 1 if device["bay1"][runtime] <= device["bay2"][runtime] else 2
         elif slot not in fragrance_bays:
-            raise PuraApiException(f"Slot {slot} does not have a fragrance installed")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="fragrance_slot_empty",
+                translation_placeholders={"slot": slot},
+            )
 
         if await self.hass.async_add_executor_job(
             functools.partial(

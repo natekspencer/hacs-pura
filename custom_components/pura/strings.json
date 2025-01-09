@@ -70,5 +70,19 @@
       "runtime": { "name": "Runtime" },
       "timer": { "name": "Timer" }
     }
+  },
+  "exceptions": {
+    "away_mode_active": {
+      "message": "Away mode is currently active. Return to your space or disable away mode in order to control your diffuser"
+    },
+    "fragrance_slot_empty": {
+      "message": "Slot {slot} does not have a fragrance installed"
+    },
+    "no_fragrances_installed": {
+      "message": "Diffuser does not have any fragrances"
+    },
+    "no_active_fragrance": {
+      "message": "No fragrance is currently active. Please select a fragrance before adjusting intensity"
+    }
   }
 }
