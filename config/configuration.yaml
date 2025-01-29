@@ -3,6 +3,7 @@
 automation:
 frontend:
 history:
+isal:
 logbook:
 
 homeassistant:

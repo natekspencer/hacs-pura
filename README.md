@@ -14,7 +14,7 @@
 
 Home Assistant integration for Pura smart fragrance diffusers.
 
-# Installation
+## Installation
 
 There are two main ways to install this custom component within your Home Assistant instance:
 
@@ -37,7 +37,7 @@ There are two main ways to install this custom component within your Home Assist
 
 While the manual installation above seems like less steps, it's important to note that you will not be able to see updates to this custom component unless you are subscribed to the watch list. You will then have to repeat each step in the process. By using HACS, you'll be able to see that an update is available and easily update the custom component.
 
-# Configuration
+## Configuration
 
 There is a config flow for this Pura integration. After installing the custom component:
 
@@ -45,6 +45,18 @@ There is a config flow for this Pura integration. After installing the custom co
 2. Click **+ ADD INTEGRATION** to setup a new integration
 3. Search for **Pura** and click on it
 4. You will be guided through the rest of the setup process via the config flow
+
+## Troubleshooting
+
+If you created your Pura account using one of the third-party provider options (e.g., Apple, Facebook, Google), you will need to set a password on your account before using this integration. You will still be able to use your third-party provider sign in with the Pura mobile app or on [pura.com](https://pura.com/). To do so, follow these steps in the Pura mobile app:
+
+1. Open the Pura app, go to the `Settings` tab and note your email address.
+2. Scroll down and sign out of the app.
+3. On the login screen, click `Sign into your account`.
+4. Click on `Forgot your password?`.
+5. Enter the email from step 1 and click `Send code`.
+6. Follow the steps in the Pura app to set your new password (check your email, enter the verification code and create your password). If you didn't receive a verification code, check your spam folder or request a new code.
+7. Once you have successfully set a password, follow the configuration steps above.
 
 ---
 
