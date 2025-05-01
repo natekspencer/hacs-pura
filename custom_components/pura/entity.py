@@ -89,7 +89,7 @@ class PuraEntity(CoordinatorEntity[PuraDataUpdateCoordinator]):
         bay = 0
         if (data := device["bay1"]) and data["activeAt"]:
             bay = 1
-        elif (data := device["bay2"]) and data["activeAt"]:
+        elif (data := device.get("bay2")) and data["activeAt"]:
             bay = 2
         intensity = device["deviceDefaults"][f"bay{bay}Intensity"] if bay else None
         return {"bay": bay, "controller": str(controller), "intensity": intensity}
