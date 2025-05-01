@@ -36,7 +36,7 @@ class PuraBinarySensorEntityDescription(
 
 
 SENSORS: dict[tuple[str, ...], tuple[PuraBinarySensorEntityDescription, ...]] = {
-    ("car"): (
+    ("car", "mini"): (  # single fragrance
         PuraBinarySensorEntityDescription(
             key="low_fragrance",
             name="Low fragrance",
@@ -44,7 +44,7 @@ SENSORS: dict[tuple[str, ...], tuple[PuraBinarySensorEntityDescription, ...]] = 
             on_fn=lambda data: data["bay1"]["lowFragrance"],
         ),
     ),
-    ("wall", "plus"): (
+    ("wall", "plus", "mini"): (
         PuraBinarySensorEntityDescription(
             key="connected",
             name="Connected",

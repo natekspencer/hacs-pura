@@ -38,7 +38,7 @@ async def async_setup_entry(
             device_id=get_device_id(device),
         )
         for device_type, devices in coordinator.devices.items()
-        if device_type == "wall"
+        if device_type in ("wall", "mini")
         for device in devices
     ]
 

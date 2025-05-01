@@ -91,16 +91,16 @@ class PuraCalendarEntity(CoordinatorEntity[PuraDataUpdateCoordinator], CalendarE
                 summary=f"{schedule['name']} - {device['displayName']['name']}",
                 start=_parse_datetime(now, schedule["start"], schedule["disableUntil"]),
                 end=_parse_datetime(now, schedule["end"], schedule["disableUntil"]),
-                description=f'Fragrance slot {schedule["bay"]} ('
-                + device[f'bay{schedule["bay"]}']["fragrance"]["name"]
-                + f')\nIntensity {schedule["intensity"]}',
+                description=f"Fragrance slot {schedule['bay']} ("
+                + device[f"bay{schedule['bay']}"]["fragrance"]["name"]
+                + f")\nIntensity {schedule['intensity']}",
                 uid=schedule["id"],
                 rrule=Recur.from_rrule(
-                    f'FREQ=WEEKLY;BYDAY={",".join(day[:2].upper() for day in schedule["days"] if schedule["days"][day])};INTERVAL=1'
+                    f"FREQ=WEEKLY;BYDAY={','.join(day[:2].upper() for day in schedule['days'] if schedule['days'][day])};INTERVAL=1"
                 ),
             )
             for device_type, devices in self.coordinator.devices.items()
-            if device_type in ("wall", "plus")
+            if device_type in ("wall", "plus", "mini")
             for device in devices
             for schedule in device.get("schedules", [])
             if schedule["disableUntil"] != -1

@@ -62,7 +62,7 @@ SWITCHES: dict[tuple[str, ...], tuple[PuraSwitchEntityDescription, ...]] = {
             ),
         ),
     ),
-    ("wall", "plus"): (
+    ("wall", "plus", "mini"): (
         PuraSwitchEntityDescription(
             key="away_mode",
             name="Away mode",
