@@ -22,6 +22,21 @@ from .entity import PuraEntity
 from .helpers import get_device_id
 
 
+def build_away_mode_json(entity: PuraSwitchEntity, away_mode: bool) -> dict:
+    """Build away mode json."""
+    away_mode_details = {"away_mode": away_mode}
+
+    if not away_mode:
+        return away_mode_details
+
+    device_location = entity.get_device()["deviceLocation"] or {}
+    return away_mode_details | {
+        "latitude": device_location.get("latitude") or entity.hass.config.latitude,
+        "longitude": device_location.get("longitude") or entity.hass.config.longitude,
+        "radius": device_location.get("radius") or 150,
+    }
+
+
 @dataclass
 class RequiredKeysMixin:
     """Required keys mixin."""
@@ -54,16 +69,7 @@ SWITCHES: dict[tuple[str, ...], tuple[PuraSwitchEntityDescription, ...]] = {
             lookup_key="awayMode",
             toggle_fn=lambda self, value: (
                 self.coordinator.api.set_away_mode,
-                {"away_mode": value}
-                | (
-                    {
-                        k: v
-                        for k, v in self.get_device()["deviceLocation"].items()
-                        if k in ("radius", "longitude", "latitude")
-                    }
-                    if value
-                    else {}
-                ),
+                build_away_mode_json(self, value),
             ),
         ),
     ),
