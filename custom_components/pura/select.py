@@ -82,7 +82,7 @@ class PuraSelectEntityDescription(SelectEntityDescription):
 
 
 SELECT_DESCRIPTIONS = {
-    ("wall", "plus"): (
+    ("wall", "plus", "mini"): (
         PuraSelectEntityDescription(
             key="fragrance",
             translation_key="fragrance",
@@ -105,27 +105,6 @@ SELECT_DESCRIPTIONS = {
                 select.coordinator.api.set_intensity,
                 select._device_id,
                 bay=select._intensity_data["bay"],
-                controller=(
-                    str(select._intensity_data["number"])
-                    if (controller := select._intensity_data["controller"])
-                    == "schedule"
-                    else controller
-                ),
-                intensity=INTENSITY_MAP[option],
-            ),
-        ),
-    ),
-    ("mini",): (
-        PuraSelectEntityDescription(
-            key="intensity",
-            translation_key="intensity",
-            entity_category=EntityCategory.CONFIG,
-            current_fn=lambda data: data["intensity"] or "off",
-            options=["off", "subtle", "medium", "strong"],
-            select_fn=lambda select, option: functools.partial(
-                select.coordinator.api.set_intensity,
-                select._device_id,
-                bay=1,
                 controller=(
                     str(select._intensity_data["number"])
                     if (controller := select._intensity_data["controller"])

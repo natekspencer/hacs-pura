@@ -30,7 +30,7 @@ def determine_pura_model(data: dict[str, Any]) -> str | None:
 
 def has_fragrance(data: dict, bay: int) -> bool:
     """Check if the specified bay has a fragrance."""
-    return bool(data[f"bay{bay}"])
+    return bool(data.get(f"bay{bay}"))
 
 
 class PuraEntity(CoordinatorEntity[PuraDataUpdateCoordinator]):
