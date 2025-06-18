@@ -50,14 +50,15 @@ async def async_setup_entry(
     entities = [
         PuraSelectEntity(
             coordinator=coordinator,
-            description=descriptor,
+            description=description,
             device_type=device_type,
             device_id=get_device_id(device),
         )
+        for device_types, descriptions in SELECT_DESCRIPTIONS.items()
         for device_type, devices in coordinator.devices.items()
-        if device_type in ("wall", "plus")
+        if device_type in device_types
         for device in devices
-        for descriptor in SELECT_DESCRIPTIONS
+        for description in descriptions
     ]
 
     if not entities:
@@ -80,38 +81,41 @@ class PuraSelectEntityDescription(SelectEntityDescription):
     select_fn: Callable[[PuraSelectEntity, str], functools.partial[bool]]
 
 
-SELECT_DESCRIPTIONS = (
-    PuraSelectEntityDescription(
-        key="fragrance",
-        translation_key="fragrance",
-        current_fn=lambda data: "off" if (b := data["bay"]) == 0 else f"slot_{b}",
-        options_fn=lambda data: ["off"]
-        + [f"slot_{i}" for i in (1, 2) if has_fragrance(data, i)],
-        select_fn=lambda select, option: functools.partial(
-            select.coordinator.api.set_always_on,
-            select._device_id,
-            bay=int(option.replace("slot_", "")),
-        ),
-    ),
-    PuraSelectEntityDescription(
-        key="intensity",
-        translation_key="intensity",
-        entity_category=EntityCategory.CONFIG,
-        current_fn=lambda data: data["intensity"] or "off",
-        options=["off", "subtle", "medium", "strong"],
-        select_fn=lambda select, option: functools.partial(
-            select.coordinator.api.set_intensity,
-            select._device_id,
-            bay=select._intensity_data["bay"],
-            controller=(
-                str(select._intensity_data["number"])
-                if (controller := select._intensity_data["controller"]) == "schedule"
-                else controller
+SELECT_DESCRIPTIONS = {
+    ("wall", "plus", "mini"): (
+        PuraSelectEntityDescription(
+            key="fragrance",
+            translation_key="fragrance",
+            current_fn=lambda data: "off" if (b := data["bay"]) == 0 else f"slot_{b}",
+            options_fn=lambda data: ["off"]
+            + [f"slot_{i}" for i in (1, 2) if has_fragrance(data, i)],
+            select_fn=lambda select, option: functools.partial(
+                select.coordinator.api.set_always_on,
+                select._device_id,
+                bay=int(option.replace("slot_", "")),
             ),
-            intensity=INTENSITY_MAP[option],
+        ),
+        PuraSelectEntityDescription(
+            key="intensity",
+            translation_key="intensity",
+            entity_category=EntityCategory.CONFIG,
+            current_fn=lambda data: data["intensity"] or "off",
+            options=["off", "subtle", "medium", "strong"],
+            select_fn=lambda select, option: functools.partial(
+                select.coordinator.api.set_intensity,
+                select._device_id,
+                bay=select._intensity_data["bay"],
+                controller=(
+                    str(select._intensity_data["number"])
+                    if (controller := select._intensity_data["controller"])
+                    == "schedule"
+                    else controller
+                ),
+                intensity=INTENSITY_MAP[option],
+            ),
         ),
     ),
-)
+}
 
 
 class PuraSelectEntity(PuraEntity, SelectEntity):

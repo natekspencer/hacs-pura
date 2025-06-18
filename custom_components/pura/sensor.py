@@ -58,6 +58,24 @@ def fragrance_runtime(data: dict, bay: str) -> int:
 SENSORS: dict[tuple[str, ...], tuple[PuraSensorEntityDescription, ...]] = {
     ("car"): (
         PuraSensorEntityDescription(
+            key="intensity",
+            translation_key="intensity",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            icon="mdi:fan",
+            available_fn=lambda data: has_fragrance(data, 1),
+            value_fn=lambda data: data["bay1"]["fanIntensity"],
+        ),
+        PuraSensorEntityDescription(
+            key="last_active",
+            translation_key="last_active",
+            device_class=SensorDeviceClass.TIMESTAMP,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            available_fn=lambda data: has_fragrance(data, 1),
+            value_fn=lambda data: datetime.fromtimestamp(data["bay1"]["activeAt"], UTC),
+        ),
+    ),
+    ("car", "mini"): (
+        PuraSensorEntityDescription(
             key="fragrance",
             translation_key="fragrance",
             entity_category=EntityCategory.DIAGNOSTIC,
@@ -75,22 +93,6 @@ SENSORS: dict[tuple[str, ...], tuple[PuraSensorEntityDescription, ...]] = {
             suggested_display_precision=0,
             available_fn=lambda data: has_fragrance(data, 1),
             value_fn=lambda data: fragrance_remaining(data, 1),
-        ),
-        PuraSensorEntityDescription(
-            key="intensity",
-            translation_key="intensity",
-            entity_category=EntityCategory.DIAGNOSTIC,
-            icon="mdi:fan",
-            available_fn=lambda data: has_fragrance(data, 1),
-            value_fn=lambda data: data["bay1"]["fanIntensity"],
-        ),
-        PuraSensorEntityDescription(
-            key="last_active",
-            translation_key="last_active",
-            device_class=SensorDeviceClass.TIMESTAMP,
-            entity_category=EntityCategory.DIAGNOSTIC,
-            available_fn=lambda data: has_fragrance(data, 1),
-            value_fn=lambda data: datetime.fromtimestamp(data["bay1"]["activeAt"], UTC),
         ),
         PuraSensorEntityDescription(
             key="runtime",
@@ -203,6 +205,8 @@ SENSORS: dict[tuple[str, ...], tuple[PuraSensorEntityDescription, ...]] = {
             available_fn=lambda data: has_fragrance(data, 2),
             value_fn=lambda data: datetime.fromtimestamp(data["bay2"]["id"], UTC),
         ),
+    ),
+    ("wall", "plus", "mini"): (
         PuraSensorEntityDescription(
             key="controller",
             translation_key="controller",
@@ -218,6 +222,18 @@ SENSORS: dict[tuple[str, ...], tuple[PuraSensorEntityDescription, ...]] = {
             value_fn=lambda data: None
             if not (end := (data.get("timer") or {}).get("end"))
             else utc_from_timestamp(end),
+        ),
+    ),
+    ("mini"): (
+        PuraSensorEntityDescription(
+            key="bay_1_installed",
+            translation_key="bay_installed",
+            translation_placeholders={"bay": ""},
+            device_class=SensorDeviceClass.TIMESTAMP,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            available_fn=lambda data: has_fragrance(data, 1),
+            value_fn=lambda data: datetime.fromtimestamp(data["bay1"]["id"], UTC),
         ),
     ),
 }
