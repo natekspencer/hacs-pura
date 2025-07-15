@@ -92,8 +92,12 @@ class PuraCalendarEntity(CoordinatorEntity[PuraDataUpdateCoordinator], CalendarE
                 start=_parse_datetime(now, schedule["start"], schedule["disableUntil"]),
                 end=_parse_datetime(now, schedule["end"], schedule["disableUntil"]),
                 description=f"Fragrance slot {schedule['bay']} ("
-                + device[f"bay{schedule['bay']}"]["fragrance"]["name"]
-                + f")\nIntensity {schedule['intensity']}",
+                + (
+                    bay["fragrance"]["name"]
+                    if (bay := device[f"bay{schedule['bay']}"])
+                    else "Empty"
+                )
+                + f") with {schedule['intensity']} intensity",
                 uid=schedule["id"],
                 rrule=Recur.from_rrule(
                     f"FREQ=WEEKLY;BYDAY={','.join(day[:2].upper() for day in schedule['days'] if schedule['days'][day])};INTERVAL=1"
