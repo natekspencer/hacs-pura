@@ -41,6 +41,8 @@ class PuraSensorEntityDescription(SensorEntityDescription, RequiredKeysMixin):
 def fragrance_remaining(data: dict, bay: str) -> float:
     """Return the fragrance remaining."""
     bay_data = data[f"bay{bay}"]
+    if (remaining := bay_data.get("remaining")) and "percent" in remaining:
+        return remaining["percent"]
     expected_life = bay_data["fragrance"]["expectedLifeHours"] * 3600
     return (max(expected_life - fragrance_runtime(data, bay), 0) / expected_life) * 100
 
