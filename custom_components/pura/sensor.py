@@ -20,8 +20,13 @@ from homeassistant.util.dt import UTC, utc_from_timestamp
 
 from . import PuraConfigEntry
 from .coordinator import PuraDataUpdateCoordinator
-from .entity import PuraEntity, has_fragrance
-from .helpers import get_device_id
+from .entity import PuraEntity
+from .helpers import (
+    fragrance_remaining,
+    fragrance_runtime,
+    get_device_id,
+    has_fragrance,
+)
 
 
 @dataclass
@@ -36,25 +41,6 @@ class PuraSensorEntityDescription(SensorEntityDescription, RequiredKeysMixin):
     """Pura sensor entity description."""
 
     available_fn: Callable[[dict], bool] | None = None
-
-
-def fragrance_remaining(data: dict, bay: str) -> float:
-    """Return the fragrance remaining."""
-    bay_data = data[f"bay{bay}"]
-    if (remaining := bay_data.get("remaining")) and "percent" in remaining:
-        return remaining["percent"]
-    expected_life = bay_data["fragrance"]["expectedLifeHours"] * 3600
-    return (max(expected_life - fragrance_runtime(data, bay), 0) / expected_life) * 100
-
-
-def fragrance_runtime(data: dict, bay: str) -> int:
-    """Return the fragrance runtime."""
-    bay_data = data[f"bay{bay}"]
-    wearing_time = bay_data["wearingTime"]
-    if (active_at := bay_data["activeAt"]) and not data["lastConnectedAt"]:
-        active_time = datetime.now(UTC) - datetime.fromtimestamp(active_at, UTC)
-        wearing_time += int(active_time.total_seconds())
-    return wearing_time
 
 
 SENSORS: dict[tuple[str, ...], tuple[PuraSensorEntityDescription, ...]] = {

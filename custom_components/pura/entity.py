@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from homeassistant.helpers.device_registry import (
     CONNECTION_BLUETOOTH,
     CONNECTION_NETWORK_MAC,
@@ -14,23 +12,9 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import PuraDataUpdateCoordinator
+from .helpers import determine_pura_model
 
 UPDATE_INTERVAL = 30
-
-PURA_MODEL_MAP = {1: "Wall", 2: "Car", "car": "Car", 3: "Plus", 4: "Mini"}
-
-
-def determine_pura_model(data: dict[str, Any]) -> str | None:
-    """Determine pura device model."""
-    if (model := PURA_MODEL_MAP.get(m := data.get("model"), m)) == "Wall":
-        version = data.get("hwVersion", "3").split(".", 1)[0]
-        model = "3" if version in ("1", "2") else version
-    return f"Pura {model}"
-
-
-def has_fragrance(data: dict, bay: int) -> bool:
-    """Check if the specified bay has a fragrance."""
-    return bool(data.get(f"bay{bay}"))
 
 
 class PuraEntity(CoordinatorEntity[PuraDataUpdateCoordinator]):
@@ -80,7 +64,7 @@ class PuraEntity(CoordinatorEntity[PuraDataUpdateCoordinator]):
     def _intensity_data(self) -> dict:
         """Get the intensity data."""
         device = self.get_device()
-        if (controller := device["controller"]) == "timer":
+        if (controller := device["controller"]) == "timer" and device[controller]:
             return device[controller] | {"controller": controller}
         if controller.isnumeric():
             for schedule in device["schedules"]:

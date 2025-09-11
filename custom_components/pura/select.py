@@ -22,8 +22,13 @@ from homeassistant.helpers.entity_platform import (
 from . import PuraConfigEntry
 from .const import ATTR_DURATION, ATTR_INTENSITY, ATTR_SLOT, DOMAIN
 from .coordinator import PuraDataUpdateCoordinator
-from .entity import PuraEntity, has_fragrance
-from .helpers import get_device_id
+from .entity import PuraEntity
+from .helpers import (
+    fragrance_remaining as remaining,
+    fragrance_runtime as runtime,
+    get_device_id,
+    has_fragrance,
+)
 
 INTENSITY_MAP = {"subtle": 3, "medium": 6, "strong": 10}
 
@@ -167,8 +172,12 @@ class PuraSelectEntity(PuraEntity, SelectEntity):
             if len(fragrance_bays) == 1:
                 slot = fragrance_bays[0]
             else:
-                runtime = "wearingTime"
-                slot = 1 if device["bay1"][runtime] <= device["bay2"][runtime] else 2
+                if (s1_r := remaining(device, 1)) > (s2_r := remaining(device, 2)):
+                    slot = 1
+                elif s2_r > s1_r:
+                    slot = 2
+                else:
+                    slot = 1 if runtime(device, 1) <= runtime(device, 2) else 2
         elif slot not in fragrance_bays:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
