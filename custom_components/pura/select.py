@@ -24,10 +24,11 @@ from .const import ATTR_DURATION, ATTR_INTENSITY, ATTR_SLOT, DOMAIN
 from .coordinator import PuraDataUpdateCoordinator
 from .entity import PuraEntity
 from .helpers import (
-    fragrance_remaining as remaining,
+    fragrance_remaining,
     fragrance_runtime as runtime,
     get_device_id,
     has_fragrance,
+    parse_intensity,
 )
 
 INTENSITY_MAP = {"subtle": 3, "medium": 6, "strong": 10}
@@ -104,7 +105,7 @@ SELECT_DESCRIPTIONS = {
             key="intensity",
             translation_key="intensity",
             entity_category=EntityCategory.CONFIG,
-            current_fn=lambda data: data["intensity"] or "off",
+            current_fn=lambda data: parse_intensity(data["intensity"]),
             options=["off", "subtle", "medium", "strong"],
             select_fn=lambda select, option: functools.partial(
                 select.coordinator.api.set_intensity,
@@ -172,7 +173,9 @@ class PuraSelectEntity(PuraEntity, SelectEntity):
             if len(fragrance_bays) == 1:
                 slot = fragrance_bays[0]
             else:
-                if (s1_r := remaining(device, 1)) > (s2_r := remaining(device, 2)):
+                if (s1_r := fragrance_remaining(device, 1) or 0) > (
+                    s2_r := fragrance_remaining(device, 2) or 0
+                ):
                     slot = 1
                 elif s2_r > s1_r:
                     slot = 2

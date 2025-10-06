@@ -11,6 +11,21 @@ from homeassistant.util.dt import UTC
 PURA_MODEL_MAP = {1: "Wall", 2: "Car", "car": "Car", 3: "Plus", 4: "Mini"}
 
 
+def deep_merge(dict1: dict, dict2: dict) -> dict:
+    """Merge two dictionaries recursively."""
+    for key, value in dict2.items():
+        if key in dict1 and isinstance(dict1[key], dict) and isinstance(value, dict):
+            deep_merge(dict1[key], value)
+        elif key not in dict1:
+            dict1[key] = value
+        elif dict1[key] != value:
+            dict1[key] = value
+            if key == "code" and not value and "fragrance" in dict1:
+                del dict1["fragrance"]
+
+    return dict1
+
+
 def determine_pura_model(data: dict[str, Any]) -> str | None:
     """Determine pura device model."""
     if (model := PURA_MODEL_MAP.get(m := data.get("model"), m)) == "Wall":
@@ -29,13 +44,25 @@ def first_key_value(
     return default
 
 
-def fragrance_remaining(data: dict, bay: int | str) -> float:
+def fragrance_name(data: dict, bay: int | str) -> float:
+    """Return the fragrance remaining."""
+    bay_data = data[f"bay{bay}"]
+    if (fragrance := bay_data.get("fragrance")) and "name" in fragrance:
+        return fragrance["name"]
+    return f"Fragrance: {bay_data.get('code')}"
+
+
+def fragrance_remaining(data: dict, bay: int | str) -> float | None:
     """Return the fragrance remaining."""
     bay_data = data[f"bay{bay}"]
     if (remaining := bay_data.get("remaining")) and "percent" in remaining:
         return remaining["percent"]
-    expected_life = bay_data["fragrance"]["expectedLifeHours"] * 3600
-    return (max(expected_life - fragrance_runtime(data, bay), 0) / expected_life) * 100
+    if (fragrance := bay_data.get("fragrance")) and "expectedLifeHours" in fragrance:
+        expected_life = fragrance["expectedLifeHours"] * 3600
+        return (
+            max(expected_life - fragrance_runtime(data, bay), 0) / expected_life
+        ) * 100
+    return None
 
 
 def fragrance_runtime(data: dict, bay: int | str) -> int:
@@ -55,4 +82,20 @@ def get_device_id(data: dict[str, Any]) -> str | None:
 
 def has_fragrance(data: dict, bay: int) -> bool:
     """Check if the specified bay has a fragrance."""
-    return bool(data.get(f"bay{bay}"))
+    return bool((bay_data := data.get(f"bay{bay}")) and bay_data.get("code"))
+
+
+def parse_intensity(intensity: int | str) -> str:
+    """Parse the intensity.
+
+    1-3 = subtle,
+    4-7 = medium,
+    8-10 = strong
+    """
+    if isinstance(intensity, int):
+        if intensity < 4:
+            return "subtle"
+        if intensity < 8:
+            return "medium"
+        return "strong"
+    return intensity or "off"
