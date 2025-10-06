@@ -22,6 +22,7 @@ from . import PuraConfigEntry
 from .coordinator import PuraDataUpdateCoordinator
 from .entity import PuraEntity
 from .helpers import (
+    fragrance_name,
     fragrance_remaining,
     fragrance_runtime,
     get_device_id,
@@ -69,7 +70,7 @@ SENSORS: dict[tuple[str, ...], tuple[PuraSensorEntityDescription, ...]] = {
             entity_category=EntityCategory.DIAGNOSTIC,
             icon="mdi:scent",
             available_fn=lambda data: has_fragrance(data, 1),
-            value_fn=lambda data: data["bay1"]["fragrance"]["name"],
+            value_fn=lambda data: fragrance_name(data, 1),
         ),
         PuraSensorEntityDescription(
             key="fragrance_remaining",
@@ -99,10 +100,10 @@ SENSORS: dict[tuple[str, ...], tuple[PuraSensorEntityDescription, ...]] = {
             key="active_fragrance",
             translation_key="active_fragrance",
             icon="mdi:scent",
-            value_fn=lambda data: bay["fragrance"]["name"]
+            value_fn=lambda data: fragrance_name(data, 1)
             if (bay := data["bay1"]) and bay["activeAt"]
             else (
-                bay["fragrance"]["name"]
+                fragrance_name(data, 2)
                 if (bay := data["bay2"]) and bay["activeAt"]
                 else "none"
             ),
@@ -114,7 +115,7 @@ SENSORS: dict[tuple[str, ...], tuple[PuraSensorEntityDescription, ...]] = {
             entity_category=EntityCategory.DIAGNOSTIC,
             icon="mdi:scent",
             available_fn=lambda data: has_fragrance(data, 1),
-            value_fn=lambda data: data["bay1"]["fragrance"]["name"],
+            value_fn=lambda data: fragrance_name(data, 1),
         ),
         PuraSensorEntityDescription(
             key="bay_1_fragrance_remaining",
@@ -157,7 +158,7 @@ SENSORS: dict[tuple[str, ...], tuple[PuraSensorEntityDescription, ...]] = {
             entity_category=EntityCategory.DIAGNOSTIC,
             icon="mdi:scent",
             available_fn=lambda data: has_fragrance(data, 2),
-            value_fn=lambda data: data["bay2"]["fragrance"]["name"],
+            value_fn=lambda data: fragrance_name(data, 2),
         ),
         PuraSensorEntityDescription(
             key="bay_2_fragrance_remaining",

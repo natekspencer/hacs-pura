@@ -24,7 +24,7 @@ from .const import ATTR_DURATION, ATTR_INTENSITY, ATTR_SLOT, DOMAIN
 from .coordinator import PuraDataUpdateCoordinator
 from .entity import PuraEntity
 from .helpers import (
-    fragrance_remaining as remaining,
+    fragrance_remaining,
     fragrance_runtime as runtime,
     get_device_id,
     has_fragrance,
@@ -173,7 +173,9 @@ class PuraSelectEntity(PuraEntity, SelectEntity):
             if len(fragrance_bays) == 1:
                 slot = fragrance_bays[0]
             else:
-                if (s1_r := remaining(device, 1)) > (s2_r := remaining(device, 2)):
+                if (s1_r := fragrance_remaining(device, 1) or 0) > (
+                    s2_r := fragrance_remaining(device, 2) or 0
+                ):
                     slot = 1
                 elif s2_r > s1_r:
                     slot = 2
