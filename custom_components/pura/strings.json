@@ -48,12 +48,22 @@
     "sensor": {
       "active_fragrance": {
         "name": "Active fragrance",
-        "state": { "none": "None" }
+        "state": {
+          "none": "None"
+        }
       },
-      "bay_fragrance": { "name": "Slot {bay} fragrance" },
-      "bay_fragrance_remaining": { "name": "Slot {bay} fragrance remaining" },
-      "bay_installed": { "name": "Slot {bay} installed" },
-      "bay_runtime": { "name": "Slot {bay} runtime" },
+      "bay_fragrance": {
+        "name": "Slot {bay} fragrance"
+      },
+      "bay_fragrance_remaining": {
+        "name": "Slot {bay} fragrance remaining"
+      },
+      "bay_installed": {
+        "name": "Slot {bay} installed"
+      },
+      "bay_runtime": {
+        "name": "Slot {bay} runtime"
+      },
       "controller": {
         "name": "Controller",
         "state": {
@@ -63,12 +73,24 @@
           "timer": "Timer"
         }
       },
-      "fragrance": { "name": "Fragrance" },
-      "fragrance_remaining": { "name": "Fragrance remaining" },
-      "intensity": { "name": "Fan intensity" },
-      "last_active": { "name": "Last active" },
-      "runtime": { "name": "Runtime" },
-      "timer": { "name": "Timer" }
+      "fragrance": {
+        "name": "Fragrance"
+      },
+      "fragrance_remaining": {
+        "name": "Fragrance remaining"
+      },
+      "intensity": {
+        "name": "Fan intensity"
+      },
+      "last_active": {
+        "name": "Last active"
+      },
+      "runtime": {
+        "name": "Runtime"
+      },
+      "timer": {
+        "name": "Timer"
+      }
     }
   },
   "exceptions": {
@@ -78,11 +100,34 @@
     "fragrance_slot_empty": {
       "message": "Slot {slot} does not have a fragrance installed"
     },
+    "invalid_device": {
+      "message": "Device {name} does not support setting timers"
+    },
     "no_fragrances_installed": {
       "message": "Diffuser does not have any fragrances"
     },
     "no_active_fragrance": {
       "message": "No fragrance is currently active. Please select a fragrance before adjusting intensity"
+    }
+  },
+  "services": {
+    "start_timer": {
+      "name": "Start timer",
+      "description": "Start a fragrance timer.",
+      "fields": {
+        "slot": {
+          "name": "Slot",
+          "description": "Fragrance slot. Leave blank to automatically select the fragrance with the most scent remaining."
+        },
+        "intensity": {
+          "name": "Intensity",
+          "description": "Fragrance intensity."
+        },
+        "duration": {
+          "name": "Duration",
+          "description": "Timer duration."
+        }
+      }
     }
   }
 }

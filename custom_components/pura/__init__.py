@@ -14,10 +14,12 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_ID_TOKEN, CONF_REFRESH_TOKEN, DOMAIN
 from .coordinator import PuraDataUpdateCoordinator
 from .helpers import get_device_id
+from .services import async_setup_services
 
 type PuraConfigEntry = ConfigEntry[PuraDataUpdateCoordinator]
 
@@ -30,6 +32,12 @@ PLATFORMS = [
     Platform.SWITCH,
     Platform.UPDATE,
 ]
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Pura integration."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PuraConfigEntry) -> bool:

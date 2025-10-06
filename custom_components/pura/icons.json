@@ -26,5 +26,10 @@
         }
       }
     }
+  },
+  "services": {
+    "start_timer": {
+      "service": "mdi:timer"
+    }
   }
 }
