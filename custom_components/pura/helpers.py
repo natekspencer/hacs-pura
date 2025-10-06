@@ -11,6 +11,18 @@ from homeassistant.util.dt import UTC
 PURA_MODEL_MAP = {1: "Wall", 2: "Car", "car": "Car", 3: "Plus", 4: "Mini"}
 
 
+def deep_merge(dict1: dict, dict2: dict) -> dict:
+    """Merge two dictionaries recursively."""
+    for key, value in dict2.items():
+        if key in dict1 and isinstance(dict1[key], dict) and isinstance(value, dict):
+            deep_merge(dict1[key], value)
+        elif key not in dict1:
+            dict1[key] = value
+        elif dict1[key] != value:
+            dict1[key] = value
+    return dict1
+
+
 def determine_pura_model(data: dict[str, Any]) -> str | None:
     """Determine pura device model."""
     if (model := PURA_MODEL_MAP.get(m := data.get("model"), m)) == "Wall":
@@ -56,3 +68,19 @@ def get_device_id(data: dict[str, Any]) -> str | None:
 def has_fragrance(data: dict, bay: int) -> bool:
     """Check if the specified bay has a fragrance."""
     return bool(data.get(f"bay{bay}"))
+
+
+def parse_intensity(intensity: int | str) -> str:
+    """Parse the intensity.
+
+    1-3 = subtle,
+    4-7 = medium,
+    8-10 = strong
+    """
+    if isinstance(intensity, int):
+        if intensity < 4:
+            return "subtle"
+        if intensity < 8:
+            return "medium"
+        return "strong"
+    return intensity or "off"

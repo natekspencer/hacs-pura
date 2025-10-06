@@ -28,6 +28,7 @@ from .helpers import (
     fragrance_runtime as runtime,
     get_device_id,
     has_fragrance,
+    parse_intensity,
 )
 
 INTENSITY_MAP = {"subtle": 3, "medium": 6, "strong": 10}
@@ -104,7 +105,7 @@ SELECT_DESCRIPTIONS = {
             key="intensity",
             translation_key="intensity",
             entity_category=EntityCategory.CONFIG,
-            current_fn=lambda data: data["intensity"] or "off",
+            current_fn=lambda data: parse_intensity(data["intensity"]),
             options=["off", "subtle", "medium", "strong"],
             select_fn=lambda select, option: functools.partial(
                 select.coordinator.api.set_intensity,
