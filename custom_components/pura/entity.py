@@ -51,6 +51,7 @@ class PuraEntity(CoordinatorEntity[PuraDataUpdateCoordinator]):
             manufacturer="Pura",
             model=determine_pura_model(device),
             name=f"{name} Diffuser",
+            serial_number=device_id,
             suggested_area=name if device_type in ("wall", "plus") else None,
             sw_version=device["fwVersion"],
             hw_version=device["hwVersion"],

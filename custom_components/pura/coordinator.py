@@ -43,13 +43,15 @@ class PuraDataUpdateCoordinator(DataUpdateCoordinator):
         )
         self.subscriber.start(self._async_handle_message)
 
-    def get_device(self, device_type: str, device_id: str) -> dict | None:
+    def get_device(self, device_type: str | None, device_id: str) -> dict | None:
         """Get device by type and id."""
         return next(
             (
-                device
-                for device in self.devices[device_type]
-                if get_device_id(device) == device_id
+                {"deviceType": _type} | device
+                for _type, _devices in self.devices.items()
+                if device_type is None or device_type == _type
+                for device in _devices
+                if device_id == get_device_id(device)
             ),
             None,
         )

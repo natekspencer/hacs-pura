@@ -4,47 +4,21 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import timedelta
 import functools
-
-import voluptuous as vol
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import (
-    AddEntitiesCallback,
-    async_get_current_platform,
-)
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import PuraConfigEntry
-from .const import ATTR_DURATION, ATTR_INTENSITY, ATTR_SLOT, DOMAIN
+from .const import DOMAIN
 from .coordinator import PuraDataUpdateCoordinator
 from .entity import PuraEntity
-from .helpers import (
-    fragrance_remaining,
-    fragrance_runtime as runtime,
-    get_device_id,
-    has_fragrance,
-    parse_intensity,
-)
+from .helpers import get_device_id, has_fragrance, parse_intensity
 
 INTENSITY_MAP = {"subtle": 3, "medium": 6, "strong": 10}
-
-SERVICE_START_TIMER = "start_timer"
-SERVICE_TIMER_SCHEMA = vol.All(
-    cv.make_entity_service_schema(
-        {
-            vol.Optional(ATTR_SLOT): vol.All(vol.Coerce(int), vol.Range(min=1, max=2)),
-            vol.Required(ATTR_INTENSITY): vol.All(
-                vol.Coerce(int), vol.Range(min=1, max=10)
-            ),
-            vol.Required(ATTR_DURATION): cv.positive_time_period,
-        },
-    )
-)
 
 
 async def async_setup_entry(
@@ -71,11 +45,6 @@ async def async_setup_entry(
         return
 
     async_add_entities(entities)
-
-    platform = async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_START_TIMER, SERVICE_TIMER_SCHEMA, "async_start_timer"
-    )
 
 
 @dataclass(kw_only=True)
@@ -157,44 +126,4 @@ class PuraSelectEntity(PuraEntity, SelectEntity):
                 )
 
         if await self.hass.async_add_executor_job(job):
-            await self.coordinator.async_request_refresh()
-
-    async def async_start_timer(
-        self, *, slot: int | None = None, intensity: int, duration: timedelta
-    ) -> None:
-        """Start a fragrance timer."""
-        device = self.get_device()
-        if not (fragrance_bays := [i for i in (1, 2) if has_fragrance(device, i)]):
-            raise ServiceValidationError(
-                translation_domain=DOMAIN, translation_key="no_fragrances_installed"
-            )
-
-        if not slot:
-            if len(fragrance_bays) == 1:
-                slot = fragrance_bays[0]
-            else:
-                if (s1_r := fragrance_remaining(device, 1) or 0) > (
-                    s2_r := fragrance_remaining(device, 2) or 0
-                ):
-                    slot = 1
-                elif s2_r > s1_r:
-                    slot = 2
-                else:
-                    slot = 1 if runtime(device, 1) <= runtime(device, 2) else 2
-        elif slot not in fragrance_bays:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="fragrance_slot_empty",
-                translation_placeholders={"slot": slot},
-            )
-
-        if await self.hass.async_add_executor_job(
-            functools.partial(
-                self.coordinator.api.set_timer,
-                self._device_id,
-                bay=slot,
-                intensity=intensity,
-                end=duration,
-            )
-        ):
             await self.coordinator.async_request_refresh()
