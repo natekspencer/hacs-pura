@@ -9,13 +9,13 @@ from typing import Any
 from homeassistant.util.dt import UTC
 
 PURA_MODEL_MAP = {
-    "2_2": "2",
-    "3_2": "3",
-    "4_7": "4",
-    "1_1": "Car",
-    "27_9": "Car Pro",
-    "22_10": "Plus",
-    "26_8": "Mini",
+    "2": "3",
+    "3": "3",
+    "4": "4",
+    "1": "Car",
+    "27": "Car Pro",
+    "22": "Plus",
+    "26": "Mini",
 }
 
 
@@ -38,10 +38,8 @@ def determine_pura_model(data: dict[str, Any]) -> str | None:
     """Determine pura device model."""
     hwVersion = data.get("hwVersion")
     hwMajor = hwVersion[: hwVersion.index(".")]
-    fwVersion = data.get("fwVersion")
-    fwMajor = fwVersion[: fwVersion.index(".")]
 
-    model = PURA_MODEL_MAP.get(hwMajor + "_" + fwMajor) or hwMajor + "_" + fwMajor
+    model = PURA_MODEL_MAP.get(hwMajor) or hwMajor
     return f"Pura {model}"
 
 
