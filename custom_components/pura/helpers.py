@@ -8,7 +8,15 @@ from typing import Any
 
 from homeassistant.util.dt import UTC
 
-PURA_MODEL_MAP = {1: "Wall", 2: "Car", "car": "Car", 3: "Plus", 4: "Mini"}
+PURA_MODEL_MAP = {
+    "2": "3",
+    "3": "3",
+    "4": "4",
+    "1": "Car",
+    "27": "Car Pro",
+    "22": "Plus",
+    "26": "Mini",
+}
 
 
 def deep_merge(dict1: dict, dict2: dict) -> dict:
@@ -28,9 +36,10 @@ def deep_merge(dict1: dict, dict2: dict) -> dict:
 
 def determine_pura_model(data: dict[str, Any]) -> str | None:
     """Determine pura device model."""
-    if (model := PURA_MODEL_MAP.get(m := data.get("model"), m)) == "Wall":
-        version = data.get("hwVersion", "3").split(".", 1)[0]
-        model = "3" if version in ("1", "2") else version
+    hwVersion = data["hwVersion"]
+    hwMajor = hwVersion[: hwVersion.index(".")]
+
+    model = PURA_MODEL_MAP.get(hwMajor) or hwMajor
     return f"Pura {model}"
 
 
