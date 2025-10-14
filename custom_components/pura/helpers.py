@@ -36,7 +36,7 @@ def deep_merge(dict1: dict, dict2: dict) -> dict:
 
 def determine_pura_model(data: dict[str, Any]) -> str | None:
     """Determine pura device model."""
-    hwVersion = data.get("hwVersion")
+    hwVersion = data["hwVersion"]
     hwMajor = hwVersion[: hwVersion.index(".")]
 
     model = PURA_MODEL_MAP.get(hwMajor) or hwMajor
