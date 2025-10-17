@@ -36,11 +36,8 @@ def deep_merge(dict1: dict, dict2: dict) -> dict:
 
 def determine_pura_model(data: dict[str, Any]) -> str | None:
     """Determine pura device model."""
-    hwVersion = data["hwVersion"]
-    hwMajor = hwVersion[: hwVersion.index(".")]
-
-    model = PURA_MODEL_MAP.get(hwMajor) or hwMajor
-    return f"Pura {model}"
+    hwMajor = get_hardware_major_version(data)
+    return f"Pura {PURA_MODEL_MAP.get(hwMajor) or hwMajor}"
 
 
 def first_key_value(
@@ -87,6 +84,11 @@ def fragrance_runtime(data: dict, bay: int | str) -> int:
 def get_device_id(data: dict[str, Any]) -> str | None:
     """Get the device id from a dictionary."""
     return data["deviceId"]
+
+
+def get_hardware_major_version(data: dict[str, Any]) -> str:
+    """Get the major hardware version of a pura device."""
+    return data["hwVersion"].split(".")[0]
 
 
 def has_fragrance(data: dict, bay: int) -> bool:

@@ -17,9 +17,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import PuraConfigEntry
-from .coordinator import PuraDataUpdateCoordinator
 from .entity import PuraEntity
-from .helpers import get_device_id
+from .helpers import get_device_id, get_hardware_major_version
 
 
 def build_away_mode_json(entity: PuraSwitchEntity, away_mode: bool) -> dict:
@@ -37,21 +36,38 @@ def build_away_mode_json(entity: PuraSwitchEntity, away_mode: bool) -> dict:
     }
 
 
-@dataclass
-class RequiredKeysMixin:
-    """Required keys mixin."""
+async def async_setup_entry(
+    hass: HomeAssistant, entry: PuraConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up Pura switchs using config entry."""
+    coordinator = entry.runtime_data
+    async_add_entities(
+        [
+            PuraSwitchEntity(
+                coordinator=coordinator,
+                description=description,
+                device_type=device_type,
+                device_id=get_device_id(device),
+            )
+            for hardware_versions, descriptions in SWITCHES.items()
+            for device_type, devices in coordinator.devices.items()
+            for device in devices
+            for description in descriptions
+            if get_hardware_major_version(device) in hardware_versions
+        ]
+    )
+
+
+@dataclass(kw_only=True)
+class PuraSwitchEntityDescription(SwitchEntityDescription):
+    """Pura switch entity description."""
 
     lookup_key: str
     toggle_fn: Callable[[PuraEntity, bool], tuple[Callable[..., True], dict]]
 
 
-@dataclass
-class PuraSwitchEntityDescription(SwitchEntityDescription, RequiredKeysMixin):
-    """Pura switch entity description."""
-
-
 SWITCHES: dict[tuple[str, ...], tuple[PuraSwitchEntityDescription, ...]] = {
-    ("wall"): (
+    ("2"): (
         PuraSwitchEntityDescription(
             key="ambient_mode",
             name="Ambient mode",
@@ -62,7 +78,7 @@ SWITCHES: dict[tuple[str, ...], tuple[PuraSwitchEntityDescription, ...]] = {
             ),
         ),
     ),
-    ("wall", "plus", "mini"): (
+    ("2", "3", "4", "26", "22"): (
         PuraSwitchEntityDescription(
             key="away_mode",
             name="Away mode",
@@ -74,32 +90,6 @@ SWITCHES: dict[tuple[str, ...], tuple[PuraSwitchEntityDescription, ...]] = {
         ),
     ),
 }
-
-
-async def async_setup_entry(
-    hass: HomeAssistant, entry: PuraConfigEntry, async_add_entities: AddEntitiesCallback
-) -> None:
-    """Set up Pura switchs using config entry."""
-    coordinator: PuraDataUpdateCoordinator = entry.runtime_data
-
-    entities = [
-        PuraSwitchEntity(
-            coordinator=coordinator,
-            description=description,
-            device_type=device_type,
-            device_id=get_device_id(device),
-        )
-        for device_types, descriptions in SWITCHES.items()
-        for device_type, devices in coordinator.devices.items()
-        if device_type in device_types
-        for device in devices
-        for description in descriptions
-    ]
-
-    if not entities:
-        return
-
-    async_add_entities(entities)
 
 
 class PuraSwitchEntity(PuraEntity, SwitchEntity):
