@@ -93,8 +93,8 @@ class PuraCalendarEntity(CoordinatorEntity[PuraDataUpdateCoordinator], CalendarE
                 end=_parse_datetime(now, schedule["end"], schedule["disableUntil"]),
                 description=f"Fragrance slot {schedule['bay']} ("
                 + (
-                    bay["fragrance"]["name"]
-                    if (bay := device[f"bay{schedule['bay']}"])
+                    bay.get("fragrance", {}).get("name", "Unknown")
+                    if (bay := device.get(f"bay{schedule['bay']}"))
                     else "Empty"
                 )
                 + f") with {schedule['intensity']} intensity",
