@@ -2,18 +2,14 @@
 
 start_timer:
   target:
-    device:
-      - integration: pura
-        model: Pura 3
-      - integration: pura
-        model: Pura 4
-      - integration: pura
-        model: Pura Plus
-      - integration: pura
-        model: Pura Mini
     entity:
       - integration: pura
   fields:
+    device_id:
+      required: false
+      selector:
+        device:
+          integration: pura
     slot:
       required: false
       example: 1
