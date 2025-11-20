@@ -120,6 +120,9 @@
     },
     "no_fragrances_installed": {
       "message": "Diffuser does not have any fragrances"
+    },
+    "no_devices_found": {
+      "message": "Unable to start timer(s) - no valid Pura devices were targeted"
     }
   },
   "services": {
@@ -127,6 +130,14 @@
       "name": "Start timer",
       "description": "Start a fragrance timer.",
       "fields": {
+        "area_id": {
+          "description": "The area(s) to target. If an area is specified, all Pura devices in that area will be targeted.",
+          "name": "Area ID(s)"
+        },
+        "device_id": {
+          "description": "The device(s) to target.",
+          "name": "Device ID(s)"
+        },
         "slot": {
           "name": "Slot",
           "description": "Fragrance slot. Leave blank to automatically select the fragrance with the most scent remaining."

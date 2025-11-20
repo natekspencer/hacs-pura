@@ -49,14 +49,10 @@ async def async_get_devices(call: ServiceCall) -> dict[str, PuraDataUpdateCoordi
 
     for entity_id in await async_extract_entity_ids(call):
         entry = ent_reg.async_get(entity_id)
-        if entry is not None and entry.config_entry_id is not None:
+        if entry and entry.config_entry_id and entry.device_id:
             if (device_entry := dev_reg.async_get(entry.device_id)) is None:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="invalid_device",
-                    translation_placeholders={"device_id": entry.device_id},
-                )
-            if device_entry.serial_number not in devices:
+                continue
+            if device_entry.serial_number and device_entry.serial_number not in devices:
                 for entry_id in device_entry.config_entries:
                     if entry := hass.config_entries.async_get_entry(entry_id):
                         if entry.domain == DOMAIN:
@@ -73,6 +69,12 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async def start_timer(call: ServiceCall) -> None:
         """Start a fragrance timer."""
         devices = await async_get_devices(call)
+        if not devices:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="no_devices_found",
+            )
+
         tasks = []
 
         for device_id, coordinator in devices.items():
@@ -80,7 +82,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="invalid_device",
-                    translation_placeholders={"name": device["displayName"]["name"]},
+                    translation_placeholders={"name": device_id},
                 )
 
             if device["deviceType"] == "car":
@@ -124,7 +126,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
             tasks.append(hass.async_add_executor_job(_set_timer))
 
         await asyncio.gather(*tasks)
-        await coordinator.async_request_refresh()
+        for coordinator in set(devices.values()):
+            await coordinator.async_request_refresh()
 
     hass.services.async_register(
         DOMAIN, SERVICE_START_TIMER, start_timer, schema=SERVICE_TIMER_SCHEMA
