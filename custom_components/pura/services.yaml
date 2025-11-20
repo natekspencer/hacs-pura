@@ -1,15 +1,36 @@
 # Describes the format for available Pura services
 
 start_timer:
-  target:
-    entity:
-      - integration: pura
   fields:
+    area_id:
+      required: false
+      example: living_room
+      selector:
+        area:
+          device:
+            - integration: pura
+              model: Pura 3
+            - integration: pura
+              model: Pura 4
+            - integration: pura
+              model: Pura Plus
+            - integration: pura
+              model: Pura Mini
+          multiple: true
     device_id:
       required: false
       selector:
         device:
-          integration: pura
+          filter:
+            - integration: pura
+              model: Pura 3
+            - integration: pura
+              model: Pura 4
+            - integration: pura
+              model: Pura Plus
+            - integration: pura
+              model: Pura Mini
+          multiple: true
     slot:
       required: false
       example: 1
