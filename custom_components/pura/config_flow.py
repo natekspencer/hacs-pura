@@ -7,11 +7,22 @@ from typing import Any
 from pypura import Pura, PuraAuthenticationError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlowWithConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
+)
 
-from .const import DOMAIN
+from .const import (
+    CONF_UPDATE_INTERVAL,
+    DEFAULT_UPDATE_INTERVAL,
+    DOMAIN,
+    MAX_UPDATE_INTERVAL,
+    MIN_UPDATE_INTERVAL,
+)
 
 _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
@@ -23,6 +34,13 @@ class PuraConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Pura."""
 
     VERSION = 1
+
+    @staticmethod
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> PuraOptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return PuraOptionsFlowHandler(config_entry)
 
     async def _async_create_entry(self, user_input: dict[str, Any]) -> FlowResult:
         """Create the config entry."""
@@ -114,4 +132,35 @@ class PuraConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_pura_login(
             step_id="reauth_confirm", user_input=user_input, schema=reauth_schema
+        )
+
+
+class PuraOptionsFlowHandler(OptionsFlowWithConfigEntry):
+    """Handle Pura options."""
+
+    async def async_step_init(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_UPDATE_INTERVAL,
+                        default=self.config_entry.options.get(
+                            CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL
+                        ),
+                    ): NumberSelector(
+                        NumberSelectorConfig(
+                            min=MIN_UPDATE_INTERVAL,
+                            max=MAX_UPDATE_INTERVAL,
+                            step=1,
+                            mode=NumberSelectorMode.BOX,
+                            unit_of_measurement="seconds",
+                        )
+                    ),
+                }
+            ),
         )

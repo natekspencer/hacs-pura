@@ -61,7 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PuraConfigEntry) -> bool
     except Exception as ex:
         raise ConfigEntryNotReady(ex) from ex
 
-    coordinator = PuraDataUpdateCoordinator(hass, client=client)
+    coordinator = PuraDataUpdateCoordinator(hass, client=client, config_entry=entry)
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator

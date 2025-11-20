@@ -25,6 +25,18 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "update_interval": "Update interval"
+        },
+        "data_description": {
+          "update_interval": "How often to poll the Pura API (seconds)"
+        }
+      }
+    }
+  },
   "entity": {
     "select": {
       "fragrance": {

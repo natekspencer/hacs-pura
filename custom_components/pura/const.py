@@ -8,6 +8,14 @@ DOMAIN: Final = "pura"
 
 CONF_ID_TOKEN: Final = "id_token"
 CONF_REFRESH_TOKEN: Final = "refresh_token"
+CONF_UPDATE_INTERVAL: Final = "update_interval"
+
+MIN_UPDATE_INTERVAL: Final = 30
+MAX_UPDATE_INTERVAL: Final = 300
+DEFAULT_UPDATE_INTERVAL: Final = 30
+MAX_JITTER: Final = 30  # Maximum jitter in seconds (50% of interval, capped at 30s)
+BACKOFF_MULTIPLIER: Final = 2  # Max backoff = user interval * this
+MIN_MAX_BACKOFF: Final = 300  # 5 minute floor for max backoff
 
 ATTR_SLOT: Final = "slot"
 ATTR_INTENSITY: Final = "intensity"
