@@ -120,6 +120,9 @@
     },
     "no_fragrances_installed": {
       "message": "Diffuser does not have any fragrances"
+    },
+    "no_devices_found": {
+      "message": "Unable to start timer(s) - no valid Pura devices were targeted"
     }
   },
   "services": {

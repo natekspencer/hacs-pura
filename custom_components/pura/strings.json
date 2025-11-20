@@ -120,6 +120,9 @@
     },
     "no_active_fragrance": {
       "message": "No fragrance is currently active. Please select a fragrance before adjusting intensity"
+    },
+    "no_devices_found": {
+      "message": "Unable to start timer(s) - no valid Pura devices were targeted"
     }
   },
   "services": {
