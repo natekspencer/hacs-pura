@@ -78,7 +78,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
         tasks = []
 
         for device_id, coordinator in devices.items():
-            if (device := coordinator.get_device(None, device_id)) is None:
+            try:
+                device = coordinator.get_device(None, device_id)
+            except LookupError:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="invalid_device",

@@ -81,7 +81,7 @@ def fragrance_runtime(data: dict, bay: int | str) -> int:
     return wearing_time
 
 
-def get_device_id(data: dict[str, Any]) -> str | None:
+def get_device_id(data: dict[str, Any]) -> str:
     """Get the device id from a dictionary."""
     return data["deviceId"]
 

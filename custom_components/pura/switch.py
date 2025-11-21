@@ -41,37 +41,49 @@ async def async_setup_entry(
 ) -> None:
     """Set up Pura switchs using config entry."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        [
-            PuraSwitchEntity(
-                coordinator=coordinator,
-                description=description,
-                device_type=device_type,
-                device_id=get_device_id(device),
-            )
-            for hardware_versions, descriptions in SWITCHES.items()
-            for device_type, devices in coordinator.devices.items()
-            for device in devices
-            for description in descriptions
-            if get_hardware_major_version(device) in hardware_versions
-        ]
+    entities = [
+        PuraSwitchEntity(
+            coordinator=coordinator,
+            description=description,
+            device_type=device_type,
+            device_id=get_device_id(device),
+        )
+        for hardware_versions, descriptions in SWITCHES.items()
+        for device_type, devices in coordinator.devices.items()
+        for device in devices
+        for description in descriptions
+        if get_hardware_major_version(device) in hardware_versions
+    ]
+    entities.extend(
+        PuraSwitchEntity(
+            coordinator=coordinator,
+            description=DIFFUSION_MODE_SWITCH,
+            device_type=device_type,
+            device_id=get_device_id(device),
+        )
+        for device_type, devices in coordinator.devices.items()
+        for device in devices
+        if len((device.get("capabilities") or {}).get("diffusionModes") or []) > 1
     )
+    async_add_entities(entities)
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class PuraSwitchEntityDescription(SwitchEntityDescription):
     """Pura switch entity description."""
 
     lookup_key: str
-    toggle_fn: Callable[[PuraEntity, bool], tuple[Callable[..., True], dict]]
+    is_on_fn: Callable[[Any], bool]
+    toggle_fn: Callable[[PuraSwitchEntity, bool], tuple[Callable[..., bool], dict]]
 
 
 SWITCHES: dict[tuple[str, ...], tuple[PuraSwitchEntityDescription, ...]] = {
-    ("2"): (
+    ("2",): (
         PuraSwitchEntityDescription(
             key="ambient_mode",
             name="Ambient mode",
             lookup_key="ambientMode",
+            is_on_fn=lambda data: data,
             toggle_fn=lambda self, value: (
                 self.coordinator.api.set_ambient_mode,
                 {"ambient_mode": value},
@@ -83,6 +95,7 @@ SWITCHES: dict[tuple[str, ...], tuple[PuraSwitchEntityDescription, ...]] = {
             key="away_mode",
             name="Away mode",
             lookup_key="awayMode",
+            is_on_fn=lambda data: data["enabled"],
             toggle_fn=lambda self, value: (
                 self.coordinator.api.set_away_mode,
                 build_away_mode_json(self, value),
@@ -90,6 +103,17 @@ SWITCHES: dict[tuple[str, ...], tuple[PuraSwitchEntityDescription, ...]] = {
         ),
     ),
 }
+
+DIFFUSION_MODE_SWITCH = PuraSwitchEntityDescription(
+    key="diffusion_mode",
+    translation_key="diffusion_mode",
+    lookup_key="diffusionMode",
+    is_on_fn=lambda data: data == "oscillation-multi-bay",
+    toggle_fn=lambda self, value: (
+        self.coordinator.api.set_diffusion_mode,
+        {"mode": "oscillation-multi-bay" if value else "standard"},
+    ),
+)
 
 
 class PuraSwitchEntity(PuraEntity, SwitchEntity):
@@ -102,10 +126,10 @@ class PuraSwitchEntity(PuraEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return True if the switch is on."""
-        return data["enabled"] if isinstance(data := self._data, dict) else data
+        return self.entity_description.is_on_fn(self._data)
 
     @property
-    def _data(self) -> dict:
+    def _data(self) -> Any:
         """Get the fragrance data."""
         return self.get_device().get(self.entity_description.lookup_key)
 
@@ -119,7 +143,9 @@ class PuraSwitchEntity(PuraEntity, SwitchEntity):
 
     async def async_toggle(self, **kwargs: Any) -> None:
         """Toggle the switch."""
-        _fn, _data = self.entity_description.toggle_fn(self, **kwargs)
+        if (value := kwargs.get("value")) is None:
+            value = not self.is_on
+        _fn, _data = self.entity_description.toggle_fn(self, value)
 
         if await self.hass.async_add_executor_job(
             functools.partial(_fn, self._device_id, **_data)

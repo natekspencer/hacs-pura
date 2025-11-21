@@ -106,18 +106,16 @@ class PuraDataUpdateCoordinator(JitterBackoffMixin, DataUpdateCoordinator):
         )
         self.subscriber.start(self._async_handle_message)
 
-    def get_device(self, device_type: str | None, device_id: str) -> dict | None:
+    def get_device(self, device_type: str | None, device_id: str) -> dict:
         """Get device by type and id."""
-        return next(
-            (
-                {"deviceType": _type} | device
-                for _type, _devices in self.devices.items()
-                if device_type is None or device_type == _type
-                for device in _devices
-                if device_id == get_device_id(device)
-            ),
-            None,
-        )
+        for dev_type, devices in self.devices.items():
+            if device_type is not None and device_type != dev_type:
+                continue
+            for device in devices:
+                if device_id == get_device_id(device):
+                    return {"deviceType": dev_type} | device
+
+        raise LookupError(f"Device {device_id!r} not found")
 
     async def _async_handle_message(self, data: dict) -> None:
         """Handle a pushed data message."""

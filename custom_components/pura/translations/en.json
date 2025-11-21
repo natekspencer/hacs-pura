@@ -103,6 +103,11 @@
       "timer": {
         "name": "Timer"
       }
+    },
+    "switch": {
+      "diffusion_mode": {
+        "name": "Auto-alternate fragrances"
+      }
     }
   },
   "exceptions": {

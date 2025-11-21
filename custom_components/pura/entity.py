@@ -57,7 +57,7 @@ class PuraEntity(CoordinatorEntity[PuraDataUpdateCoordinator]):
             hw_version=device["hwVersion"],
         )
 
-    def get_device(self) -> dict | None:
+    def get_device(self) -> dict:
         """Get the device from the coordinator."""
         return self.coordinator.get_device(self._device_type, self._device_id)
 
