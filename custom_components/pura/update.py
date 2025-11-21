@@ -21,16 +21,11 @@ from .helpers import get_device_id
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class RequiredKeysMixin:
-    """Required keys mixin."""
+@dataclass(frozen=True, kw_only=True)
+class PuraUpdateEntityDescription(UpdateEntityDescription):
+    """Pura update entity description."""
 
     lookup_key: str
-
-
-@dataclass
-class PuraUpdateEntityDescription(UpdateEntityDescription, RequiredKeysMixin):
-    """Pura update entity description."""
 
 
 UPDATE = PuraUpdateEntityDescription(key="firmware", lookup_key="fwVersion")
