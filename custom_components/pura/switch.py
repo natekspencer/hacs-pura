@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 import functools
-from typing import Any, cast
+from typing import Any
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -143,9 +143,9 @@ class PuraSwitchEntity(PuraEntity, SwitchEntity):
 
     async def async_toggle(self, **kwargs: Any) -> None:
         """Toggle the switch."""
-        _fn, _data = self.entity_description.toggle_fn(
-            self, cast(bool, kwargs.get("value"))
-        )
+        if (value := kwargs.get("value")) is None:
+            value = not self.is_on
+        _fn, _data = self.entity_description.toggle_fn(self, value)
 
         if await self.hass.async_add_executor_job(
             functools.partial(_fn, self._device_id, **_data)
