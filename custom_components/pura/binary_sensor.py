@@ -21,18 +21,11 @@ from .entity import PuraEntity
 from .helpers import get_device_id
 
 
-@dataclass
-class RequiredKeysMixin:
-    """Required keys mixin."""
+@dataclass(frozen=True, kw_only=True)
+class PuraBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Pura binary sensor entity description."""
 
     on_fn: Callable[[dict], Any]
-
-
-@dataclass
-class PuraBinarySensorEntityDescription(
-    BinarySensorEntityDescription, RequiredKeysMixin
-):
-    """Pura binary sensor entity description."""
 
 
 SENSORS: dict[tuple[str, ...], tuple[PuraBinarySensorEntityDescription, ...]] = {

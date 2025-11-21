@@ -30,22 +30,16 @@ from .helpers import (
 )
 
 
-@dataclass
-class RequiredKeysMixin:
-    """Required keys mixin."""
-
-    value_fn: Callable[[dict], Any | None]
-
-
-@dataclass
-class PuraSensorEntityDescription(SensorEntityDescription, RequiredKeysMixin):
+@dataclass(frozen=True, kw_only=True)
+class PuraSensorEntityDescription(SensorEntityDescription):
     """Pura sensor entity description."""
 
     available_fn: Callable[[dict], bool] | None = None
+    value_fn: Callable[[dict], Any | None]
 
 
 SENSORS: dict[tuple[str, ...], tuple[PuraSensorEntityDescription, ...]] = {
-    ("car"): (
+    ("car",): (
         PuraSensorEntityDescription(
             key="intensity",
             translation_key="intensity",
@@ -132,7 +126,7 @@ SENSORS: dict[tuple[str, ...], tuple[PuraSensorEntityDescription, ...]] = {
         PuraSensorEntityDescription(
             key="bay_1_runtime",
             translation_key="bay_runtime",
-            translation_placeholders={"bay": 1},
+            translation_placeholders={"bay": "1"},
             device_class=SensorDeviceClass.DURATION,
             entity_category=EntityCategory.DIAGNOSTIC,
             native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -144,7 +138,7 @@ SENSORS: dict[tuple[str, ...], tuple[PuraSensorEntityDescription, ...]] = {
         PuraSensorEntityDescription(
             key="bay_1_installed",
             translation_key="bay_installed",
-            translation_placeholders={"bay": 1},
+            translation_placeholders={"bay": "1"},
             device_class=SensorDeviceClass.TIMESTAMP,
             entity_category=EntityCategory.DIAGNOSTIC,
             entity_registry_enabled_default=False,
@@ -154,7 +148,7 @@ SENSORS: dict[tuple[str, ...], tuple[PuraSensorEntityDescription, ...]] = {
         PuraSensorEntityDescription(
             key="bay_2",
             translation_key="bay_fragrance",
-            translation_placeholders={"bay": 2},
+            translation_placeholders={"bay": "2"},
             entity_category=EntityCategory.DIAGNOSTIC,
             icon="mdi:scent",
             available_fn=lambda data: has_fragrance(data, 2),
@@ -163,7 +157,7 @@ SENSORS: dict[tuple[str, ...], tuple[PuraSensorEntityDescription, ...]] = {
         PuraSensorEntityDescription(
             key="bay_2_fragrance_remaining",
             translation_key="bay_fragrance_remaining",
-            translation_placeholders={"bay": 2},
+            translation_placeholders={"bay": "2"},
             entity_category=EntityCategory.DIAGNOSTIC,
             icon="mdi:scent",
             native_unit_of_measurement=PERCENTAGE,
@@ -175,7 +169,7 @@ SENSORS: dict[tuple[str, ...], tuple[PuraSensorEntityDescription, ...]] = {
         PuraSensorEntityDescription(
             key="bay_2_runtime",
             translation_key="bay_runtime",
-            translation_placeholders={"bay": 2},
+            translation_placeholders={"bay": "2"},
             device_class=SensorDeviceClass.DURATION,
             entity_category=EntityCategory.DIAGNOSTIC,
             native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -187,7 +181,7 @@ SENSORS: dict[tuple[str, ...], tuple[PuraSensorEntityDescription, ...]] = {
         PuraSensorEntityDescription(
             key="bay_2_installed",
             translation_key="bay_installed",
-            translation_placeholders={"bay": 2},
+            translation_placeholders={"bay": "2"},
             device_class=SensorDeviceClass.TIMESTAMP,
             entity_category=EntityCategory.DIAGNOSTIC,
             entity_registry_enabled_default=False,
@@ -213,7 +207,7 @@ SENSORS: dict[tuple[str, ...], tuple[PuraSensorEntityDescription, ...]] = {
             else utc_from_timestamp(end),
         ),
     ),
-    ("mini"): (
+    ("mini",): (
         PuraSensorEntityDescription(
             key="bay_1_installed",
             translation_key="bay_installed",
